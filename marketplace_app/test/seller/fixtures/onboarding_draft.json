@@ -1,0 +1,63 @@
+{
+  "seller": {
+    "id": "01a0f24f-d689-7331-a102-9b962037d6ce",
+    "display_name": "E2E Crafts f5f42b",
+    "slug": "e2e-crafts-f5f42b",
+    "status": "PENDING",
+    "support_email": null,
+    "support_phone": null,
+    "commission_rate": 10
+  },
+  "kyc": {
+    "business_type": "INDIVIDUAL",
+    "legal_name": "E2E seller",
+    "pan": null,
+    "gstin": null,
+    "registered_line1": null,
+    "registered_line2": null,
+    "registered_city": null,
+    "registered_state": null,
+    "registered_pincode": null,
+    "bank_account_holder": null,
+    "bank_account_number": null,
+    "bank_ifsc": null,
+    "bank_name": null,
+    "status": "DRAFT",
+    "submitted_at": null,
+    "reviewed_at": null,
+    "rejection_reason": null
+  },
+  "documents": [],
+  "checklist": {
+    "missing_fields": [
+      "pan",
+      "registered_line1",
+      "registered_city",
+      "registered_state",
+      "registered_pincode",
+      "bank_account_holder",
+      "bank_account_number",
+      "bank_ifsc"
+    ],
+    "missing_documents": [
+      "PAN_CARD",
+      "CANCELLED_CHEQUE"
+    ],
+    "can_submit": false,
+    "editable": true
+  },
+  "accepted_document_kinds": [
+    "PAN_CARD",
+    "GST_CERTIFICATE",
+    "CANCELLED_CHEQUE",
+    "ADDRESS_PROOF",
+    "INCORPORATION_CERT"
+  ],
+  "business_types": [
+    "INDIVIDUAL",
+    "PROPRIETORSHIP",
+    "PARTNERSHIP",
+    "LLP",
+    "PRIVATE_LIMITED"
+  ]
+}

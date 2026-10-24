@@ -1,0 +1,4 @@
+{
+  "status": "error",
+  "message": "This product has been ordered before, so it cannot be deleted. Set its status to DISCONTINUED to remove it from the store."
+}

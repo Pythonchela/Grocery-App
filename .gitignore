@@ -9,8 +9,7 @@ build/
 .env
 .env*.local
 
-# Exclude Mobile App (Flutter) from Web repo
-marketplace_app/
+# The Flutter app lives in this repository too (it has its own .gitignore).
 
 # IDE & agent scratch directories
 .agents/

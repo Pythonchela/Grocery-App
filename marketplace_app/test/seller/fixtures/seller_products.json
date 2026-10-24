@@ -1,0 +1,182 @@
+{
+  "status": "success",
+  "count": 1,
+  "data": [
+    {
+      "id": "019fb6ab-4d75-72a3-9aeb-7abb01f7bb96",
+      "title": "Hand-Embroidered Chanderi Silk Anarkali Set",
+      "slug": "chanderi-silk-anarkali-set",
+      "description": "Draped in the grandeur of India's GI-tagged Chanderi heritage, hand-embroidered by master weavers from Madhya Pradesh using genuine 24K-tested Zari threads.",
+      "category_id": "019fb6ab-4d66-72fa-85c6-c4342ad67cc9",
+      "brand": "BazaarX Heritage",
+      "mrp": "6999.00",
+      "price": "3499.00",
+      "images": [
+        "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
+      ],
+      "status": "ACTIVE",
+      "is_new": true,
+      "tags": [
+        "GI Tagged",
+        "Pure Chanderi Silk",
+        "Handloom Zari"
+      ],
+      "meta_title": null,
+      "meta_description": null,
+      "rollover_image": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
+      "authenticity_grade": "GI Heritage Certified",
+      "local_store_available": true,
+      "local_store_name": "Bengaluru Indiranagar Store (In Stock)",
+      "express_pincodes": [
+        "110001",
+        "400001",
+        "560001",
+        "700001",
+        "500001",
+        "600001"
+      ],
+      "hotspots": [
+        {
+          "id": "h1",
+          "top": "28%",
+          "left": "48%",
+          "title": "24K Gold Zari Neckline",
+          "zoomRatio": "4.5x Macro",
+          "zoomedImage": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=400&q=80",
+          "detail": "Hand-embroidered 24K tested Zari threading crafted by GI-tagged master weavers in Chanderi.",
+          "techSpecs": "Thread Density: 120 TPI • Zari Grade: Premium Tested"
+        },
+        {
+          "id": "h2",
+          "top": "55%",
+          "left": "62%",
+          "title": "Pure Chanderi Silk Weave",
+          "zoomRatio": "3.8x Macro",
+          "zoomedImage": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=400&q=80",
+          "detail": "Ultra-breathable natural silk warp & cotton weft producing a subtle translucent luster.",
+          "techSpecs": "Composition: 70% Pure Silk / 30% Cotton"
+        }
+      ],
+      "created_at": "2026-07-31T05:35:07.000000Z",
+      "updated_at": "2026-09-30T12:36:16.000000Z",
+      "search_vector": "'24k':34C '24k-tested':33C 'anarkali':6A 'bazaarx':8B 'chanderi':4A,20C 'drape':10C 'embroid':3A,24C 'genuin':32C 'gi':18C 'gi-tag':17C 'grandeur':13C 'hand':2A,23C 'hand-embroid':1A,22C 'heritag':9B,21C 'india':15C 'madhya':29C 'master':26C 'pradesh':30C 'set':7A 'silk':5A 'tag':19C 'test':35C 'thread':37C 'use':31C 'weaver':27C 'zari':36C",
+      "spin_images": [],
+      "cod_available": true,
+      "features": [
+        "Hand-embroidered 24K Zari threading",
+        "Breathable 70% silk / 30% cotton blend",
+        "Includes matching dupatta and churidar"
+      ],
+      "weight_grams": 850,
+      "length_cm": 40,
+      "width_cm": 30,
+      "height_cm": 10,
+      "requires_vehicle": false,
+      "reel_video_url": null,
+      "reel_caption": null,
+      "attributes": null,
+      "seller_id": "01a0f24f-d689-7331-a102-9b962037d6ce",
+      "approved_reviews_count": 0,
+      "approved_reviews_avg_rating": null,
+      "variants_sum_stock": 15,
+      "discount": 50,
+      "stock_count": 15,
+      "in_stock": true,
+      "rating": 0,
+      "reviews_count": 0,
+      "has_reel": false,
+      "category": {
+        "id": "019fb6ab-4d66-72fa-85c6-c4342ad67cc9",
+        "name": "Ethnic & Festive",
+        "slug": "ethnic-wear",
+        "parent_id": null,
+        "icon_url": "Sparkles",
+        "banner_url": null,
+        "filter_config": null,
+        "sort_order": 1,
+        "is_featured": true,
+        "created_at": "2026-07-31T05:35:07.000000Z",
+        "updated_at": "2026-07-31T05:35:07.000000Z"
+      },
+      "variants": [
+        {
+          "id": "019fb6ab-4d83-7175-9909-e9fee9674cde",
+          "product_id": "019fb6ab-4d75-72a3-9aeb-7abb01f7bb96",
+          "sku": "CHANDERI-SILK-ANARKALI-SET-1",
+          "color": null,
+          "size": "S",
+          "mrp": null,
+          "price": null,
+          "cost_price": null,
+          "stock": 4,
+          "images": null,
+          "created_at": "2026-07-31T05:35:07.000000Z",
+          "updated_at": "2026-07-31T05:36:08.000000Z"
+        },
+        {
+          "id": "019fb6ab-4d87-702f-b276-bad5c0fe16a2",
+          "product_id": "019fb6ab-4d75-72a3-9aeb-7abb01f7bb96",
+          "sku": "CHANDERI-SILK-ANARKALI-SET-2",
+          "color": null,
+          "size": "M",
+          "mrp": null,
+          "price": null,
+          "cost_price": null,
+          "stock": 4,
+          "images": null,
+          "created_at": "2026-07-31T05:35:07.000000Z",
+          "updated_at": "2026-07-31T05:35:07.000000Z"
+        },
+        {
+          "id": "019fb6ab-4d89-7131-b748-4baeb0a2e753",
+          "product_id": "019fb6ab-4d75-72a3-9aeb-7abb01f7bb96",
+          "sku": "CHANDERI-SILK-ANARKALI-SET-3",
+          "color": null,
+          "size": "L",
+          "mrp": null,
+          "price": null,
+          "cost_price": null,
+          "stock": 4,
+          "images": null,
+          "created_at": "2026-07-31T05:35:07.000000Z",
+          "updated_at": "2026-07-31T05:35:07.000000Z"
+        },
+        {
+          "id": "019fb6ab-4d8b-7151-93a5-243b50ff2a93",
+          "product_id": "019fb6ab-4d75-72a3-9aeb-7abb01f7bb96",
+          "sku": "CHANDERI-SILK-ANARKALI-SET-4",
+          "color": null,
+          "size": "XL",
+          "mrp": null,
+          "price": null,
+          "cost_price": null,
+          "stock": 2,
+          "images": null,
+          "created_at": "2026-07-31T05:35:07.000000Z",
+          "updated_at": "2026-07-31T05:35:07.000000Z"
+        },
+        {
+          "id": "019fb6ab-4d8f-7130-a199-830e485481f3",
+          "product_id": "019fb6ab-4d75-72a3-9aeb-7abb01f7bb96",
+          "sku": "CHANDERI-SILK-ANARKALI-SET-5",
+          "color": null,
+          "size": "Custom Tailored",
+          "mrp": null,
+          "price": null,
+          "cost_price": null,
+          "stock": 1,
+          "images": null,
+          "created_at": "2026-07-31T05:35:07.000000Z",
+          "updated_at": "2026-07-31T05:35:07.000000Z"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 20,
+    "last_page": 1,
+    "total": 1
+  }
+}
