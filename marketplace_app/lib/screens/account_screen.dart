@@ -6,7 +6,6 @@ import '../design/brand.g.dart';
 import '../design/components.dart';
 import '../design/theme.dart';
 import '../design/tokens.g.dart';
-import '../data/vendor_app_link.dart';
 import '../state/app_state.dart';
 import '../support/support_api.dart';
 import '../support/support_screens.dart';
@@ -424,24 +423,6 @@ class _AccountHomeState extends State<_AccountHome> {
                       AppState.instance.refreshUnread();
                     },
                   ),
-                  // Selling is its own app. Shop owners (and the owner of a single-business
-                  // store) are sent there; this app has no seller screens.
-                  if (AppState.instance.storeConfig.vendorsEnabled || _isStoreOwner(user)) ...[
-                    Divider(height: 1, color: c.line),
-                    _AccountLink(
-                      key: const Key('vendor-app-link'),
-                      icon: Icons.storefront_outlined,
-                      label: _isStoreOwner(user) ? 'Manage store' : 'Sell on ${DsBrand.name}',
-                      subtitle: 'Get the ${DsBrand.name} Seller app',
-                      onTap: () async {
-                        final opened = await VendorAppLink.open();
-                        if (!opened && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text('Could not open the store. Search for the seller app there.')));
-                        }
-                      },
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -485,24 +466,16 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-/// Staff of a single-business store run its one shop; that happens in the seller app.
-bool _isStoreOwner(AuthUser user) =>
-    AppState.instance.storeConfig.mode == 'single' &&
-    ['ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'].contains(user.role);
-
 class _AccountLink extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? subtitle;
   final VoidCallback onTap;
   final int badge;
 
   const _AccountLink(
-      {super.key,
-      required this.icon,
+      {required this.icon,
       required this.label,
       required this.onTap,
-      this.subtitle,
       this.badge = 0});
 
   @override
@@ -515,9 +488,6 @@ class _AccountLink extends StatelessWidget {
         style: TextStyle(
             fontSize: DsText.base, fontWeight: DsWeight.bold, color: c.ink),
       ),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: TextStyle(fontSize: DsText.sm, color: c.inkMuted)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

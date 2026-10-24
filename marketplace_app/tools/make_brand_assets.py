@@ -3,13 +3,12 @@
     python tools/make_brand_assets.py        (from marketplace_app/; needs Pillow)
 
 Writes:
-  android/app/src/<flavor>/res/...   launcher icons (adaptive + legacy) and their background colour
-  store/<flavor>/                    Play Store icon (512), feature graphic (1024x500)
-  ../public/                         the website's favicon and app icons (shopping brand)
+  android/app/src/main/res/...   launcher icons (adaptive + legacy) and their background colour
+  store/                         Play Store icon (512), feature graphic (1024x500)
+  ../public/                     the website's favicon and app icons
 
-The mark is "BX" in the display font on the brand's colours; the seller app adds a
-SELLER tag so the two are told apart on one home screen. Change a colour or a name
-here and run it again.
+The mark is the initials in the display font on the brand's colours. Change a colour,
+a name or the initials below and run it again.
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
@@ -24,19 +23,12 @@ ACCENT = (26, 86, 255)    # tokens: accent
 WHITE = (255, 255, 255)
 
 APPS = {
-    'shop': dict(
+    'main': dict(
         name='BazaarX',
         tagline='Shop everything you love',
         background=ACCENT,
         tag=None,
         tag_color=None,
-    ),
-    'vendor': dict(
-        name='BazaarX Seller',
-        tagline='Run your shop from your phone',
-        background=INK,
-        tag='SELLER',
-        tag_color=ACCENT,
     ),
 }
 
@@ -92,7 +84,7 @@ DENSITIES = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
 
 
 def android_icons(flavor, app):
-    res = os.path.join(ROOT, 'android', 'app', 'src', flavor, 'res')
+    res = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'res')
     for name, scale in DENSITIES.items():
         # Legacy icon (Android 7 and older): the rounded square itself, 48dp.
         save(mark(int(48 * scale), app, rounded=True), os.path.join(res, f'mipmap-{name}', 'ic_launcher.png'))
@@ -118,7 +110,7 @@ def android_icons(flavor, app):
 
 
 def store_images(flavor, app):
-    out = os.path.join(ROOT, 'store', flavor)
+    out = os.path.join(ROOT, 'store')
     # Play Store icon: 512x512, square (Google applies its own mask).
     save(mark(512, app, rounded=False), os.path.join(out, 'icon-512.png'))
 
@@ -169,7 +161,7 @@ def notification_icon():
 
 
 def website_icons():
-    app = APPS['shop']
+    app = APPS['main']
     save(mark(512, app, rounded=False, safe=0.8), os.path.join(WEB, 'icon-512x512.png'))
     save(mark(192, app, rounded=False, safe=0.8), os.path.join(WEB, 'icon-192x192.png'))
     save(mark(180, app, rounded=False), os.path.join(WEB, 'apple-touch-icon.png'))

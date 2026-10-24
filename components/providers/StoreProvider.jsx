@@ -11,7 +11,7 @@ import {
   selectionSignature,
   selectionSummary,
 } from '../../lib/productOptions';
-import { FALLBACK_STORE_CONFIG, readStoreConfig, shopConflict } from '../../lib/shopRules';
+import { FALLBACK_STORE_CONFIG, readStoreConfig } from '../../lib/shopRules';
 
 const StoreContext = createContext();
 
@@ -55,41 +55,11 @@ export function StoreProvider({ children }) {
    */
   const [storeConfig, setStoreConfig] = useState(FALLBACK_STORE_CONFIG);
 
-  /**
-   * An add that would mix two shops in one basket, held until the shopper says
-   * whether to start a new basket: { product, variant, selection, fromShop }.
-   */
-  const [pendingShopSwitch, setPendingShopSwitch] = useState(null);
-
-  /**
-   * Whether the localStorage read below has happened yet.
-   *
-   * `authToken` starts `null` on every mount regardless of whether the visitor
-   * is signed in — that first null is "haven't checked", not "signed out". A
-   * derived effect that reacts to `authToken` alone can't tell those apart, and
-   * treating them the same is what flashed "you are not selling" at every
-   * seller for the one render before their token loaded.
-   */
-  const [authReady, setAuthReady] = useState(false);
-
-  /**
-   * Where this account stands with the seller programme.
-   *
-   * Resolved once per sign-in and shared, because several places need it to
-   * decide what to render — the navbar, the footer, the onboarding page — and
-   * each of them refetching would mean three requests per page load for a
-   * question whose answer changes about twice in an account's lifetime.
-   *
-   * `null` means "not established yet"; components should render the neutral
-   * option until it arrives rather than flashing the wrong label.
-   */
-  const [sellerState, setSellerState] = useState(null);
-
   useEffect(() => {
     let cancelled = false;
     apiFetch('/config')
       .then((res) => { if (!cancelled) setStoreConfig(readStoreConfig(res.data)); })
-      .catch(() => { /* keep the marketplace default */ });
+      .catch(() => { /* keep the fallback */ });
     return () => { cancelled = true; };
   }, []);
 
@@ -103,7 +73,6 @@ export function StoreProvider({ children }) {
 
     const { token, user } = getStoredAuth();
     if (token) { setAuthToken(token); setAuthUser(user); }
-    setAuthReady(true);
 
     // First-touch referral capture: a shared link's ?ref= is stored the
     // moment it's seen, since the visitor who clicked it usually browses a
@@ -198,17 +167,10 @@ export function StoreProvider({ children }) {
     }
     if (selectionProblem(groups, selection || {})) return;
 
-    // One shop per basket: ask before mixing, the way delivery apps do.
-    const fromShop = shopConflict(cartItems, product, storeConfig);
-    if (fromShop) {
-      setPendingShopSwitch({ product, variant, selection, fromShop });
-      return;
-    }
-
     addLine(product, variant, selection);
   };
 
-  /** Puts the line in the basket (the shop rule has already been settled). */
+  /** Puts the line in the basket. */
   const addLine = (product, variant, selection) => {
     const groups = product.optionGroups || [];
     const options = selection || {};
@@ -242,18 +204,6 @@ export function StoreProvider({ children }) {
     });
     setIsCartOpen(true);
   };
-
-  /** "Start a new basket": empties the old shop's goods and adds the one that was held. */
-  const confirmShopSwitch = () => {
-    if (!pendingShopSwitch) return;
-    const { product, variant, selection } = pendingShopSwitch;
-    setPendingShopSwitch(null);
-    setCartItems([]);
-    addLine(product, variant, selection);
-  };
-
-  /** "Keep my basket": nothing is added. */
-  const cancelShopSwitch = () => setPendingShopSwitch(null);
 
   const handleUpdateQty = (cartItemId, newQty) => {
     if (newQty <= 0) {
@@ -324,45 +274,6 @@ export function StoreProvider({ children }) {
     if (isCartOpen) revalidateCart(cartItems);
   }, [isCartOpen]);
 
-  /**
-   * Resolve the seller state from the onboarding endpoint.
-   *
-   * A 403 with `no_seller_account` is the ordinary answer for the vast
-   * majority of accounts, not an error — it's how "this shopper has never
-   * applied" comes back.
-   */
-  const refreshSellerState = useCallback(async () => {
-    // Not "signed out" yet — the localStorage read this depends on may not
-    // have happened. Leaving sellerState at null keeps every reader on the
-    // neutral option for this one tick instead of asserting NONE and then
-    // correcting a beat later.
-    if (!authReady) return;
-
-    if (!authToken) { setSellerState({ stage: 'NONE' }); return; }
-
-    try {
-      const res = await apiFetch('/seller/onboarding', { token: authToken });
-      const sellerStatus = res.data.seller.status;
-      const kycStatus = res.data.kyc.status;
-
-      setSellerState({
-        stage: sellerStatus === 'ACTIVE' ? 'ACTIVE'
-          : kycStatus === 'SUBMITTED' ? 'IN_REVIEW'
-            : 'APPLYING',
-        sellerStatus,
-        kycStatus,
-        displayName: res.data.seller.display_name,
-      });
-    } catch (err) {
-      // Anything other than "no account" leaves the state unknown rather than
-      // asserting NONE — telling an approved seller to "start selling" because
-      // one request timed out is worse than showing nothing.
-      setSellerState(err.status === 403 ? { stage: 'NONE' } : { stage: 'UNKNOWN' });
-    }
-  }, [authToken, authReady]);
-
-  useEffect(() => { refreshSellerState(); }, [refreshSellerState]);
-
   const cartCount = cartItems.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
@@ -376,9 +287,6 @@ export function StoreProvider({ children }) {
         setIsVoiceOpen,
         handleAddToCart,
         storeConfig,
-        pendingShopSwitch,
-        confirmShopSwitch,
-        cancelShopSwitch,
         handleUpdateQty,
         handleRemoveItem,
         clearCart,
@@ -389,8 +297,6 @@ export function StoreProvider({ children }) {
         loginWithGoogle,
         logout,
         updateAuthUser,
-        sellerState,
-        refreshSellerState,
       }}
     >
       {children}

@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useStoreConfig } from '../../components/admin/useStoreConfig';
 import OrdersClient, { STATUS_COLORS } from '../../components/admin/OrdersClient';
 import LiveBoardClient from '../../components/admin/LiveBoardClient';
 import SupportInboxClient from '../../components/admin/SupportInboxClient';
 import AuditLogClient from '../../components/admin/AuditLogClient';
 import Link from 'next/link';
 import {
-  Landmark,
   LayoutDashboard, Package, Tag, ShoppingCart, Star, MessageSquare,
   Settings,
   Palette,
@@ -26,7 +24,6 @@ import BundlesSection from '../../components/admin/BundlesSection';
 import InventoryModal from '../../components/admin/InventoryModal';
 import BusinessSettingsSection from '../../components/admin/BusinessSettingsSection';
 import StoreRulesSection from '../../components/admin/StoreRulesSection';
-import CategoryRequestsSection from '../../components/admin/CategoryRequestsSection';
 import ReturnsSection from '../../components/admin/ReturnsSection';
 import BroadcastSection from '../../components/admin/BroadcastSection';
 import { apiFetch, mapProduct, mapCategory, mapOrder, STAGE_LABELS } from '../../lib/apiClient';
@@ -55,10 +52,8 @@ const NAV_ITEMS = [
   { id: 'messages', label: 'Broadcast', icon: MessageSquare },
   // Full admins only. A sub-admin who navigates here anyway gets a 403 from the
   // API and an explanation — the server is the gate, this only hides the door.
-  // Seller verification decides who may list and be paid, so it sits with the
-  // other full-admin controls rather than with day-to-day store operations.
-  { id: 'sellers', label: 'Sellers', icon: Store, href: '/admin/sellers', adminOnly: true },
-  { id: 'payouts', label: 'Payouts', icon: Landmark, href: '/admin/payouts', adminOnly: true },
+  // The owner's own shop: hours, delivery area, pickup address.
+  { id: 'store', label: 'My shop', icon: Store, href: '/admin/store', adminOnly: true },
   { id: 'users', label: 'Users & staff', icon: Users, href: '/admin/users', adminOnly: true },
   // Holds API keys, so it is full-admin only like the rest of this block.
   { id: 'integrations', label: 'Integrations & API keys', icon: KeyRound, href: '/admin/integrations', adminOnly: true },
@@ -66,24 +61,13 @@ const NAV_ITEMS = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-/**
- * Nav filtered for who is looking at it, and for what kind of store this is: a
- * single-business store has no vendors, so "Sellers" becomes "My shop" (the
- * owner's own shop page and pickup address) and nothing else about vendors shows.
- */
-function navFor(user, store) {
+/** Nav filtered for who is looking at it: some entries are for full admins only. */
+function navFor(user) {
   const canManageUsers = ['ADMIN', 'SUPER_ADMIN'].includes(user?.role);
-  const items = NAV_ITEMS.filter((item) => !item.adminOnly || canManageUsers);
-
-  if (store && !store.vendors_enabled) {
-    return items
-      .filter((item) => item.id !== 'payouts')
-      .map((item) => (item.id === 'sellers' ? { ...item, label: 'My shop' } : item));
-  }
-  return items;
+  return NAV_ITEMS.filter((item) => !item.adminOnly || canManageUsers);
 }
 
-function Sidebar({ current, onNavigate, onLogout, collapsed, setCollapsed, user, store }) {
+function Sidebar({ current, onNavigate, onLogout, collapsed, setCollapsed, user }) {
   return (
     <aside className={`fixed left-0 top-0 h-screen bg-inverse border-r border-line-strong flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`}>
       
@@ -93,7 +77,7 @@ function Sidebar({ current, onNavigate, onLogout, collapsed, setCollapsed, user,
             <div className="w-8 h-8 bg-warning rounded-control flex items-center justify-center">
               <Store className="w-4 h-4 text-ink" />
             </div>
-            <span className="font-black text-ink-inverse text-sm">BazaarX Admin</span>
+            <span className="font-black text-ink-inverse text-sm">Store Admin</span>
           </div>
         )}
         {collapsed && <div className="w-8 h-8 bg-warning rounded-control flex items-center justify-center mx-auto"><Store className="w-4 h-4 text-ink" /></div>}
@@ -103,7 +87,7 @@ function Sidebar({ current, onNavigate, onLogout, collapsed, setCollapsed, user,
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navFor(user, store).map(item => {
+        {navFor(user).map(item => {
           const Icon = item.icon;
           const active = current === item.id;
           const classes = `w-full flex items-center gap-3 px-3 py-2.5 rounded-card text-sm font-bold transition ${
@@ -188,10 +172,6 @@ function ProductsSection({ token }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
-  const store = useStoreConfig();
-  const showShops = Boolean(store?.vendors_enabled);
-  const [sellers, setSellers] = useState([]);
-  const [filterSeller, setFilterSeller] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
@@ -202,7 +182,6 @@ function ProductsSection({ token }) {
     setLoading(true);
     const params = new URLSearchParams();
     if (filterCat !== 'all') params.set('category', filterCat);
-    if (filterSeller) params.set('seller', filterSeller);
     if (search) params.set('search', search);
     // The catalog endpoint is paged now, so ask for the admin ceiling rather
     // than silently managing only the first page. Sending the token is what
@@ -219,12 +198,7 @@ function ProductsSection({ token }) {
   };
 
   useEffect(() => { fetchCategories(); }, []);
-  useEffect(() => { fetchProducts(); }, [filterCat, filterSeller, search]);
-  // Staff who may not manage sellers get a 403 here; the shop filter then simply stays hidden.
-  useEffect(() => {
-    if (!showShops) return;
-    apiFetch('/admin/sellers?per_page=200', { token }).then(res => setSellers(res.data || [])).catch(() => setSellers([]));
-  }, [showShops, token]);
+  useEffect(() => { fetchProducts(); }, [filterCat, search]);
 
   const handleSaved = (savedProduct, isEdit) => {
     const mapped = mapProduct(savedProduct);
@@ -296,12 +270,6 @@ function ProductsSection({ token }) {
           <option value="all">All Categories</option>
           {categories.map(c => <option key={c.id} value={c.slug}>{c.name}</option>)}
         </select>
-        {showShops && sellers.length > 0 && (
-          <select value={filterSeller} onChange={e => setFilterSeller(e.target.value)} aria-label="Shop" className="bg-surface border border-line rounded-card px-4 py-2.5 text-sm font-bold text-ink focus:outline-none focus:border-line-strong">
-            <option value="">All shops</option>
-            {sellers.map(s => <option key={s.id} value={s.id}>{s.display_name}{s.is_house ? ' (house)' : ''}</option>)}
-          </select>
-        )}
         <button onClick={fetchProducts} className="p-2.5 bg-surface border border-line rounded-card text-ink-muted hover:text-ink hover:border-line-strong transition">
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -340,7 +308,6 @@ function ProductsSection({ token }) {
                 <th className="text-left px-5 py-3.5 font-black text-ink-muted w-12">#</th>
                 <th className="text-left px-5 py-3.5 font-black text-ink-muted">Product</th>
                 <th className="text-left px-5 py-3.5 font-black text-ink-muted">Category</th>
-                {showShops && <th className="text-left px-5 py-3.5 font-black text-ink-muted">Shop</th>}
                 <th className="text-right px-5 py-3.5 font-black text-ink-muted">Price</th>
                 <th className="text-right px-5 py-3.5 font-black text-ink-muted">Discount</th>
                 <th className="text-center px-5 py-3.5 font-black text-ink-muted">Stock</th>
@@ -371,7 +338,6 @@ function ProductsSection({ token }) {
                   <td className="px-5 py-3.5">
                     <span className="bg-surface-sunken text-ink-muted px-2.5 py-1 rounded-pill font-bold">{product.category}</span>
                   </td>
-                  {showShops && <td className="px-5 py-3.5 text-ink-muted font-semibold">{product.seller?.display_name || '—'}</td>}
                   <td className="px-5 py-3.5 text-right font-black text-ink">₹{product.price.toLocaleString('en-IN')}</td>
                   <td className="px-5 py-3.5 text-right">
                     <span className="bg-danger-soft text-danger border border-danger px-2 py-0.5 rounded-pill font-bold">{product.discount}% OFF</span>
@@ -437,7 +403,6 @@ function ProductsSection({ token }) {
       )}
 
       <ProductFormModal
-        sellers={showShops ? sellers : []}
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditingProduct(null); }}
         product={editingProduct}
@@ -530,7 +495,6 @@ function CategoriesSection({ token }) {
         </div>
       </div>
 
-      <CategoryRequestsSection token={token} onApproved={fetchCategories} />
 
       {loading && <div className="text-center py-10 text-ink-subtle font-bold">Loading categories...</div>}
 
@@ -771,7 +735,6 @@ function OverviewSection({ onNavigate, token }) {
 // MAIN ADMIN APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AdminPage() {
-  const storeConfig = useStoreConfig();
   // Session lives in app/admin/layout.js so every /admin/* route is gated.
   const { token: adminToken, user: adminUser, logout: handleLogout } = useAdminAuth();
   const [section, setSection] = useState('overview');
@@ -824,7 +787,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-surface-muted">
-      <Sidebar current={section} onNavigate={setSection} onLogout={handleLogout} collapsed={collapsed} setCollapsed={setCollapsed} user={adminUser} store={storeConfig} />
+      <Sidebar current={section} onNavigate={setSection} onLogout={handleLogout} collapsed={collapsed} setCollapsed={setCollapsed} user={adminUser} />
       <TopBar section={section} collapsed={collapsed} adminEmail={adminUser?.email} />
       <main className={`pt-16 min-h-screen transition-all duration-300 ${collapsed ? 'pl-20' : 'pl-64'}`}>
         <div className="p-6 max-w-screen-xl">

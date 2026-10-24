@@ -1,16 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useStore } from '../providers/StoreProvider';
 import { User, Mail, KeyRound, Smartphone, RefreshCw, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function AuthPrompt() {
   const { login, register, loginWithGoogle } = useStore();
-  const router = useRouter();
-  // A seller signs in to run their shop, so that is where they land (the phone app does the
-  // same); the dashboard itself says what is missing if the shop is not approved yet.
-  const landFor = (user) => { if (user?.role === 'SELLER') router.replace('/seller'); };
   const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -51,7 +46,7 @@ export default function AuthPrompt() {
           callback: async (response) => {
             try {
               if (response.credential) {
-                landFor(await loginWithGoogle(response.credential));
+                await loginWithGoogle(response.credential);
               }
             } catch (err) {
               setError(err.message || 'Google Sign-In failed');
@@ -70,7 +65,7 @@ export default function AuthPrompt() {
         const mockName = name.trim() || 'Demo Shopper';
         const demoIdToken = `demo_google_:${mockEmail}:${mockName}`;
 
-        landFor(await loginWithGoogle(demoIdToken));
+        await loginWithGoogle(demoIdToken);
       } else {
         setError('Google sign-in is not available right now. Please use your email and password.');
       }
@@ -86,7 +81,7 @@ export default function AuthPrompt() {
     setLoading(true);
     setError('');
     try {
-      if (mode === 'login') landFor(await login(email, password));
+      if (mode === 'login') await login(email, password);
       else await register(name, email, phone, password);
     } catch (err) {
       setError(err.message || 'Authentication failed');

@@ -10,7 +10,7 @@ const EMPTY = {
   expires_at: '', is_active: true,
 };
 
-export default function CouponsSection({ token, basePath = '/admin/coupons', sellerMode = false }) {
+export default function CouponsSection({ token, basePath = '/admin/coupons' }) {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -85,7 +85,6 @@ export default function CouponsSection({ token, basePath = '/admin/coupons', sel
 
   return (
     <div className="space-y-5">
-      {sellerMode && <p className="text-sm text-ink-muted">Your codes discount items from your shop only. Minimum order spend counts only your items.</p>}
       {error && !editing && <p role="alert" className="text-sm text-danger">{error}</p>}
       {toast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-inverse text-ink-inverse px-6 py-3 rounded-pill shadow-panel z-50 font-bold text-sm">
@@ -125,7 +124,6 @@ export default function CouponsSection({ token, basePath = '/admin/coupons', sel
                   </span>
                 </div>
                 <p className="text-xs text-ink-subtle font-medium mt-0.5">{c.description}</p>
-                {!sellerMode && <p className="text-[11px] text-ink-muted mt-1">{c.seller?.display_name || 'Marketplace-wide'}</p>}
               </div>
               <span className="font-black text-ink text-lg shrink-0">
                 {c.type === 'PERCENT' ? `${parseFloat(c.value)}%` : formatINR(c.value)}

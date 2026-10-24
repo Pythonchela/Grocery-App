@@ -24,3 +24,4 @@ Thumbs.db
 
 # Other
 /lib/generated/prisma
+build.log

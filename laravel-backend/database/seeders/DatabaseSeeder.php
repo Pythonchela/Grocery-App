@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $admin2 = User::updateOrCreate(
-            ['email' => 'admin@rentalmoney.in'],
+            ['email' => 'admin@example.com'],
             [
                 'name' => 'Store Admin',
                 'password' => Hash::make('AdminPassword123!'),

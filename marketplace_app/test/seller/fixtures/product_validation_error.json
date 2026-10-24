@@ -1,8 +1,0 @@
-{
-  "message": "The variants.0.sku has already been taken.",
-  "errors": {
-    "variants.0.sku": [
-      "The variants.0.sku has already been taken."
-    ]
-  }
-}

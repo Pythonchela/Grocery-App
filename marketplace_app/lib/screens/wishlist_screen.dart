@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../widgets/shop_switch.dart';
 import '../data/api_client.dart';
 import '../data/models.dart';
 import '../design/components.dart';
@@ -267,8 +266,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                       size: BxButtonSize.sm,
                                       onPressed: p.inStock
                                           ? () async {
-                                              if (!await confirmShopSwitch(context, p)) return;
-                                              if (!context.mounted) return;
                                               final added = AppState.instance
                                                   .addToCart(p);
                                               ScaffoldMessenger.of(context)

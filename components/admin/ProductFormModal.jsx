@@ -249,11 +249,8 @@ const EMPTY_FORM = {
   requiresVehicle: false,
 };
 
-export default function ProductFormModal({ isOpen, onClose, product, categories, onSaved, token, sellers = [], defaultStatus }) {
+export default function ProductFormModal({ isOpen, onClose, product, categories, onSaved, token, defaultStatus }) {
   const [form, setForm] = useState(EMPTY_FORM);
-  // Staff adding a product can say whose shop it belongs to; blank means the house shop.
-  const [sellerId, setSellerId] = useState('');
-  useEffect(() => { if (isOpen) setSellerId(''); }, [isOpen, product]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
@@ -470,7 +467,6 @@ export default function ProductFormModal({ isOpen, onClose, product, categories,
     const mrpNum = Number.isFinite(parseFloat(form.mrp)) ? parseFloat(form.mrp) : priceNum;
 
     const payload = {
-      ...(!product && sellerId ? { seller_id: sellerId } : {}),
       title: form.title,
       slug: form.slug || autoSlug(form.title),
       // The formatted text; the server cleans it and keeps the plain version.
@@ -624,21 +620,6 @@ export default function ProductFormModal({ isOpen, onClose, product, categories,
               <div className="space-y-4">
                 <h3 className="font-black text-sm text-ink border-b border-line pb-2">Basic Product Information</h3>
 
-                {sellers.length > 0 && (
-                  <div>
-                    <label className="block text-ink-muted mb-1.5 font-bold" htmlFor="productformmodal-seller">Sold by</label>
-                    {product ? (
-                      <p className="text-sm font-semibold text-ink">{product.seller?.display_name || 'House shop'}</p>
-                    ) : (
-                      <select id="productformmodal-seller" value={sellerId} onChange={e => setSellerId(e.target.value)}
-                        className="w-full bg-surface-muted border border-line rounded-card px-4 py-3 font-semibold focus:outline-none focus:border-line-strong transition">
-                        <option value="">House shop (the store itself)</option>
-                        {sellers.filter(s => !s.is_house && s.status === 'ACTIVE').map(s => <option key={s.id} value={s.id}>{s.display_name}</option>)}
-                      </select>
-                    )}
-                    {!product && <p className="text-xs text-ink-muted mt-1">The product appears in this shop and its sales are credited to it.</p>}
-                  </div>
-                )}
 
                 <div>
                   <label className="block text-ink-muted mb-1.5 font-bold" htmlFor="productformmodal-f1">Product Title <span className="text-danger">*</span></label>

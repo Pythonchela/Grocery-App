@@ -41,9 +41,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Two apps are built from this codebase (android/app/build.gradle.kts): `shop`, the
-  # shopping app, and `vendor`, the seller app. A plain `flutter run` builds the shop.
-  default-flavor: shop
 
   # The three families the design tokens name. The web loads them from Google
   # Fonts via a generated <link>; mobile bundles them, so the app is correct

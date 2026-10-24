@@ -21,7 +21,7 @@ code is finished and switches itself on when it finds the two files below.
 
 ## 2. Give the app its file
 
-The release APK is built by GitHub Actions in `Chota-Thanos/Marketplace-mobile`.
+Build the release APK yourself (`flutter build apk --release --dart-define=API_BASE=...`).
 
 ```bash
 # Windows PowerShell:  [Convert]::ToBase64String([IO.File]::ReadAllBytes("google-services.json"))

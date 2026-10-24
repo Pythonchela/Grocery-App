@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useStore } from './providers/StoreProvider';
-import { cartShop } from '../lib/shopRules';
 import { apiFetch, formatINR } from '../lib/apiClient';
 import { brand } from '@ds/brand';
 import { collectPayment } from '../lib/payments';
@@ -35,9 +34,8 @@ import { cartLineRequest } from '../lib/productOptions';
 import { OptionPicks } from './storefront/OptionPicker';
 
 export default function CheckoutDrawer({ isOpen, onClose, cartItems, onUpdateQty, onRemoveItem, onClearCart }) {
-  const { authToken, login, register, storeConfig } = useStore();
+  const { authToken, login, register } = useStore();
   // Which shop the basket is from, when the store keeps a basket to one shop.
-  const basketShop = storeConfig.one_shop_per_cart ? cartShop(cartItems) : null;
   const [step, setStep] = useState('cart'); // 'cart' | 'auth' | 'checkout' | 'success'
   const [paymentMethod, setPaymentMethod] = useState('gpay');
   const [isGpsLoading, setIsGpsLoading] = useState(false);
@@ -382,11 +380,6 @@ export default function CheckoutDrawer({ isOpen, onClose, cartItems, onUpdateQty
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {basketShop?.name && (
-                      <p className="text-xs font-bold text-ink-muted">
-                        From <span className="text-ink">{basketShop.name}</span>
-                      </p>
-                    )}
                     {cartItems.map((item) => (
                       <div key={item.cartItemId} className="flex gap-4 p-4 border border-line rounded-card bg-surface shadow-subtle hover:shadow-card transition group">
                         <div className="w-20 h-20 bg-surface-sunken rounded-control overflow-hidden shrink-0">

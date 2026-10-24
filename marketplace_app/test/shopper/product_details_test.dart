@@ -302,7 +302,7 @@ void main() {
       expect(find.byType(ProductAssurances), findsOneWidget);
       expect(find.text('7-day return'), findsOneWidget);
       expect(find.text('Delivery details'), findsOneWidget);
-      expect(find.textContaining('RetailNet', findRichText: true), findsOneWidget);
+      expect(find.textContaining('Sold by', findRichText: true), findsNothing, reason: 'a one-business store does not name a seller');
 
       await tester.scrollUntilVisible(find.text('All details'), 300, scrollable: find.byType(Scrollable).first);
       expect(find.text('Specifications'), findsOneWidget);

@@ -4,27 +4,12 @@ The mobile client for the same Laravel API the web storefront uses, built on the
 shared design system in [`../packages`](../packages/README.md).
 
 ```
-Two apps are built from this codebase, so shoppers and shop owners each get their own:
-
-| | Shopping app | Seller app |
-|---|---|---|
-| Entry point | `lib/main.dart` | `lib/main_vendor.dart` |
-| Android flavor | `shop` | `vendor` |
-| Application id | `in.bazaarx.marketplace_app` | `in.bazaarx.seller` |
-| Name on the phone | BazaarX | BazaarX Seller |
-| For | browsing, buying, orders | applying to sell, orders, products, payouts |
-
-The shopping app has no seller screens (only a link to the seller app); the seller
-app has no cart, feed or wishlist. `test/seller/boundary_test.dart` reads the
-imports and fails if either leaks into the other.
+This is the customer app for a single-business store. There are no seller screens.
 
 ```
 lib/
-├── main.dart             the shopping app
-├── main_vendor.dart      the seller app
-├── vendor/               the seller app's session, sign-in and gate
-├── seller/               the seller area (see seller/README.md)
-├── support/              help tickets, shared by both
+├── main.dart             the app
+├── support/              help tickets
 ├── design/
 │   ├── tokens.g.dart     GENERATED — colours, radii, type, spacing, motion
 │   ├── brand.g.dart      GENERATED — names, legal text, storage namespace
@@ -38,21 +23,6 @@ lib/
 ```
 
 ## Running it
-
-Pick the app with the flavor. A plain `flutter run` builds the shopping app
-(`default-flavor: shop` in `pubspec.yaml`); the seller app needs its own entry point:
-
-```bash
-flutter run                                              # shopping app
-flutter run --flavor vendor -t lib/main_vendor.dart      # seller app
-```
-
-The app connects to the live backend at `https://api.rentalmoney.in/api/v1`
-by default, including on physical Android devices.
-
-```bash
-flutter run
-```
 
 For local development, start the Laravel API and explicitly override the URL.
 On an Android emulator:
@@ -81,34 +51,10 @@ Create `android/key.properties` locally with `storeFile`, `storePassword`,
 Keep the same signing key for all future APK updates.
 
 ```bash
-# Shopping app
-flutter build apk --release --flavor shop --dart-define=API_BASE=https://api.rentalmoney.in/api/v1
-
-# Seller app
-flutter build apk --release --flavor vendor -t lib/main_vendor.dart --dart-define=API_BASE=https://api.rentalmoney.in/api/v1
+flutter build apk --release --dart-define=API_BASE=https://api.example.com/api/v1
 ```
 
-The APKs are written to `build/app/outputs/flutter-apk/app-shop-release.apk` and
-`app-vendor-release.apk`. Both are signed with the same key; keep it safe.
-
-The shopping app links to the seller app from Account → "Sell on BazaarX". Set where
-that points with `--dart-define=VENDOR_APP_URL=<store or web page>` (the default is the
-Play Store page for `in.bazaarx.seller`).
-
-**Per-app setup that is not in the code:**
-
-- *Push (Firebase):* each app is its own Firebase app. Put `google-services.json` for
-  `in.bazaarx.marketplace_app` in `android/app/src/shop/` and the one for
-  `in.bazaarx.seller` in `android/app/src/vendor/`. Without them the apps still work:
-  the shopping app checks for order updates itself, and the seller app does the same
-  for new orders about every 15 minutes while it is closed.
-- *Google sign-in:* the shopping app only. The seller app signs in with email and
-  password; adding Google there needs its own Android OAuth client (package
-  `in.bazaarx.seller` and the signing key's SHA-1) in Google Cloud.
-- *iOS:* flavors are set up for Android only. An iOS seller app needs its own scheme
-  and bundle id in Xcode.
-- *Launcher icon:* the seller app has its own (`android/app/src/vendor/res/`). The
-  shopping app still uses Flutter's default icon until a real one is supplied.
+The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Change `applicationId` in `android/app/build.gradle.kts` and `app_name` in `android/app/src/main/res/values/strings.xml` for each client.
 
 Browser targets are subject to CORS. `laravel-backend/config/cors.php` reads a
 comma-separated `FRONTEND_URLS` which already includes `localhost:8080`; native
@@ -238,12 +184,3 @@ Store submission is still blocked: `fastlane/Appfile` carries placeholder
 `XXXXXXXXXX` team ids and there is no `play_store_credentials.json`. Building a
 release APK has been verified on this machine with Android SDK 36.1 and Java 17.
 
-## Automatic Android releases
-
-Every push to `main` in `Chota-Thanos/Marketplace-mobile` runs analysis and tests,
-then builds a signed APK connected to the live HTTPS backend. Download
-`BazaarX-live-APK` from the successful **Build live Android APK** GitHub Actions
-run. APK artifacts remain available for 30 days. The workflow increases the
-Android build number on each run so later APKs can update earlier installations.
-The signing key is kept in encrypted repository secrets, never committed.
-Website/backend deployments do not install APK updates on users' phones.

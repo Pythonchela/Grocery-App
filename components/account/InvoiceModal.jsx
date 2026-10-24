@@ -92,7 +92,6 @@ export default function InvoiceModal({ orderId, onClose }) {
                     <tr key={item.id} className="border-b border-line">
                       <td className="py-2.5 font-semibold">
                         {item.product?.title}
-                        {item.seller?.display_name && <span className="block text-[10px] font-normal text-ink-muted">Sold by {item.seller.display_name}</span>}
                         <OptionPicks picks={picksFromOrderItem(item.selected_options)} className="font-normal" />
                       </td>
                       <td className="py-2.5 text-center font-medium">{item.quantity}</td>

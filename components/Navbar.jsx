@@ -37,8 +37,6 @@ import {
 import NotificationBell from './NotificationBell';
 import { ThemeToggle } from './ThemeToggle';
 import { useStore } from './providers/StoreProvider';
-import { sellerEntry } from '../lib/sellerNav';
-import { offersSelling } from '../lib/shopRules';
 import { apiFetch } from '../lib/apiClient';
 import { brand } from '@ds/brand';
 import { useBrandLogo } from './providers/BrandProvider';
@@ -51,10 +49,8 @@ export default function Navbar({
   currentView,
   onToggleView,
 }) {
-  const { authUser, sellerState, storeConfig } = useStore();
+  const { authUser } = useStore();
   // A single-business store has no one to sell for it, so no invitation to.
-  const seller = offersSelling(storeConfig) ? sellerEntry(sellerState) : null;
-  const showsShops = storeConfig.shows_shops;
   const [selectedLang, setSelectedLang] = useState('English');
   const [selectedStore, setSelectedStore] = useState('Bengaluru HSR Store');
   const [showStoreMenu, setShowStoreMenu] = useState(false);
@@ -139,12 +135,6 @@ export default function Navbar({
               <ChevronDown className={`w-3.5 h-3.5 text-ink-subtle transition-transform ${activeDropdown === 'products' ? 'rotate-180 text-ink' : ''}`} />
             </button>
 
-            {showsShops && (
-              <Link href="/shops" className="hover:text-ink transition py-2 flex items-center gap-1">
-                <Store className="w-3.5 h-3.5 text-accent" />
-                <span>Shops</span>
-              </Link>
-            )}
             <Link href="/search?sort=newest" className="hover:text-ink transition py-2">New Arrivals</Link>
             <Link href="/search?sort=rating" className="hover:text-ink transition py-2">Best Sellers</Link>
             <Link href="/search" className="hover:text-ink transition py-2 flex items-center gap-1">
@@ -195,21 +185,6 @@ export default function Navbar({
           <ThemeToggle />
 
           <NotificationBell />
-
-          {/* Adapts to where this account stands with the seller programme:
-              an invitation for a shopper, a nudge back to a half-finished
-              application, and the dashboard once they're approved. */}
-          {seller && (
-            <Link
-              href={seller.href}
-              className={`hidden lg:flex items-center gap-1.5 text-xs font-extrabold hover:text-ink ${
-                seller.tone === 'active' ? 'text-accent' : 'text-ink-muted'
-              }`}
-            >
-              <Store className="w-4 h-4" />
-              {seller.label}
-            </Link>
-          )}
 
           <Link
             href="/account/orders"
@@ -522,20 +497,9 @@ export default function Navbar({
           <Link href="/search?sort=rating" onClick={() => setShowMobileMenu(false)} className="block py-2 text-sm font-bold text-ink">
             Best Sellers
           </Link>
-          {showsShops && (
-            <Link href="/shops" onClick={() => setShowMobileMenu(false)} className="block py-2 text-sm font-bold text-ink">
-              Shops
-            </Link>
-          )}
           <Link href="/account/orders" onClick={() => setShowMobileMenu(false)} className="block py-2 text-sm font-bold text-ink">
             My Orders
           </Link>
-          {/* The desktop entry is hidden below lg, so mobile needs its own. */}
-          {seller && (
-            <Link href={seller.href} onClick={() => setShowMobileMenu(false)} className="block py-2 text-sm font-bold text-ink">
-              {seller.label}
-            </Link>
-          )}
         </div>
       )}
 

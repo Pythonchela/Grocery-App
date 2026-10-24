@@ -19,10 +19,9 @@ export function parsePincodes(text) {
  * banner, a tagline and a few lines about the shop, when it is open, the
  * smallest basket it will deliver, and the PIN codes it covers.
  *
- * Used for any seller in the admin, and for the owner's own shop in a store
- * with no vendors. Saves through PUT /admin/sellers/{id}.
+ * The store's own profile. Saves through PUT /admin/store.
  */
-export default function ShopProfileSection({ seller, token, onSaved, endpoint = `/admin/sellers/${seller.id}` }) {
+export default function ShopProfileSection({ seller, token, onSaved, endpoint = '/admin/store' }) {
   const [form, setForm] = useState({
     logo_url: seller.logo_url || '',
     banner_url: seller.banner_url || '',
@@ -102,9 +101,9 @@ export default function ShopProfileSection({ seller, token, onSaved, endpoint = 
 
   return (
     <section className="space-y-3">
-      <h4 className="text-xs font-black text-ink uppercase tracking-wide">Shop page</h4>
+      <h4 className="text-xs font-black text-ink uppercase tracking-wide">Store details</h4>
       <p className="text-[11px] text-ink-subtle font-medium">
-        What shoppers see when they browse shops, and what the shop asks of an order.
+        How the store presents itself, and what it asks of an order.
       </p>
 
       {notice && <p className="text-xs font-bold text-success">{notice}</p>}

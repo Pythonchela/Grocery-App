@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 
 export default function ProductDetailClient({ product }) {
-  const { handleAddToCart, authToken, storeConfig } = useStore();
+  const { handleAddToCart, authToken } = useStore();
   const [selectedImage, setSelectedImage] = useState(product.images[0]);
   const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0] || null);
   const [pincode, setPincode] = useState('');
@@ -211,16 +211,6 @@ export default function ProductDetailClient({ product }) {
             <h1 className="text-3xl font-black text-ink leading-tight">
               {product.title}
             </h1>
-
-            {/* Who is selling it. Linked to the shop where the store has shop pages. */}
-            {product.soldBy && (
-              <p className="text-sm font-semibold text-ink-muted">
-                Sold by{' '}
-                {storeConfig.shows_shops && product.shopSlug
-                  ? <Link href={`/shop/${product.shopSlug}`} className="text-accent font-bold hover:underline">{product.soldBy}</Link>
-                  : <span className="text-ink font-bold">{product.soldBy}</span>}
-              </p>
-            )}
 
             {/* Ratings */}
             <div className="flex items-center gap-3">

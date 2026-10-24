@@ -53,8 +53,7 @@ class AppState extends ChangeNotifier {
 
   StoreConfig _storeConfig = StoreConfig.fallback;
 
-  /// Single business, vendors plus the owner, or vendors only. Decides whether
-  /// shops show, whether "become a seller" shows, and the one-shop basket rule.
+  /// The store this app belongs to.
   StoreConfig get storeConfig => _storeConfig;
 
   /// Reads the store's kind from the server and remembers it, so the next launch
@@ -86,23 +85,6 @@ class AppState extends ChangeNotifier {
     } catch (_) {
       _storeConfig = StoreConfig.fallback;
     }
-  }
-
-  /// The shop whose goods are in the basket, if the basket has any.
-  String? get cartShopId => _cart.isEmpty ? null : _cart.first.product.shopId;
-  String? get cartShopName => _cart.isEmpty ? null : _cart.first.product.soldBy;
-
-  /// When the store keeps a basket to one shop: the name of the shop already in
-  /// the basket if [product] is from a different one, otherwise null. The caller
-  /// asks the shopper whether to start a new basket.
-  String? shopConflictFor(Product product) {
-    if (!_storeConfig.oneShopPerCart || _cart.isEmpty) return null;
-
-    final inCart = cartShopId;
-    final incoming = product.shopId;
-    if (inCart == null || incoming == null || inCart == incoming) return null;
-
-    return cartShopName ?? 'another shop';
   }
 
   bool isWishlisted(String productId) => _wishlist.containsKey(productId);
@@ -382,9 +364,6 @@ class AppState extends ChangeNotifier {
     if (ProductOptionMath.problem(product.optionGroups, selection) != null) {
       return false;
     }
-    // Never mix shops under the one-shop rule, whoever is asking: the screens ask
-    // the shopper first and clear the basket, so reaching here means a refusal.
-    if (shopConflictFor(product) != null) return false;
     if (!product.inStock ||
         quantity <= 0 ||
         variant == null ||

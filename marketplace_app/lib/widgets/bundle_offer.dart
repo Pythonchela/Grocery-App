@@ -7,7 +7,6 @@ import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../screens/product_detail_screen.dart';
 import '../state/app_state.dart';
-import 'shop_switch.dart';
 
 /// "Buy together and save" card for the product the shopper is looking at.
 class BundleOfferCard extends StatelessWidget {
@@ -33,18 +32,6 @@ class BundleOfferCard extends StatelessWidget {
     final state = AppState.instance;
     final partner = bundle.partnerOf(current.id);
     final messenger = ScaffoldMessenger.of(context);
-
-    // Both halves of a bundle go in one basket, so they must be one shop's.
-    if (state.storeConfig.oneShopPerCart &&
-        current.shopId != null &&
-        partner.shopId != null &&
-        current.shopId != partner.shopId) {
-      messenger.showSnackBar(const SnackBar(
-          content: Text('These two items are from different shops, so they cannot be bought as a bundle.')));
-      return;
-    }
-    if (!await confirmShopSwitch(context, current)) return;
-    if (!context.mounted) return;
 
     final partnerVariant = _partnerVariant(partner);
     if (partnerVariant == null) {

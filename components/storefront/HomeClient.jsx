@@ -10,7 +10,6 @@ import CategoryGrid from './home/CategoryGrid';
 import ProductRow from './home/ProductRow';
 import ShoppertainmentPromo from './home/ShoppertainmentPromo';
 import TrustBanner from './home/TrustBanner';
-import ShopsRail from './home/ShopsRail';
 import FloatingCompareBar from './home/FloatingCompareBar';
 
 import ProductComparisonModal from '../ProductComparisonModal';
@@ -46,7 +45,7 @@ const SOURCE_TITLES = {
 };
 
 export default function HomeClient({ categories, products, hasReels = false, heroBannerSlides, sections = [] }) {
-  const { handleAddToCart, setIsVoiceOpen, authToken, storeConfig } = useStore();
+  const { handleAddToCart, setIsVoiceOpen, authToken } = useStore();
   const [reviewProduct, setReviewProduct] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [showFloatingPromo, setShowFloatingPromo] = useState(false); // disabled
@@ -184,18 +183,13 @@ export default function HomeClient({ categories, products, hasReels = false, her
   return (
     <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
 
-      {/* A vendors-only store opens on its shops; a mixed one shows them below the categories. */}
-      {storeConfig.shops_first && <ShopsRail />}
 
       {hasLayout ? (<>
         {sections.map((section) => (
           <React.Fragment key={section.id}>
             {renderSection(section)}
-            {/* Below the category grid the admin placed; a vendors-only store shows it first instead. */}
-            {!storeConfig.shops_first && section.type === 'CATEGORY_GRID' && <ShopsRail />}
           </React.Fragment>
         ))}
-        {!storeConfig.shops_first && !sections.some((s) => s.type === 'CATEGORY_GRID') && <ShopsRail />}
       </>) : (<>
 
       {/* 1. PROMOTIONAL HERO BANNER CAROUSEL */}
@@ -203,8 +197,6 @@ export default function HomeClient({ categories, products, hasReels = false, her
 
       {/* 2. SHOP BY CATEGORY GRID */}
       <CategoryGrid categories={categories} />
-
-      {!storeConfig.shops_first && <ShopsRail />}
 
       {/* 3. RECOMMENDED FOR YOU */}
       <ProductRow

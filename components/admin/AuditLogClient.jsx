@@ -5,7 +5,7 @@ import { apiFetch } from '../../lib/apiClient';
 import { useAdminAuth } from './AdminAuthContext';
 
 const GROUPS = [
-  ['', 'Everything'], ['payout', 'Payouts'], ['bank', 'Bank accounts'], ['seller', 'Sellers'], ['order', 'Orders'],
+  ['', 'Everything'], ['order', 'Orders'],
   ['return', 'Returns'], ['wallet', 'Wallets'], ['user', 'People & access'], ['staff', 'Staff'], ['settings', 'Settings'], ['support', 'Support'],
 ];
 const field = 'bg-surface border border-line rounded-control px-3 py-2 text-xs font-semibold text-ink';

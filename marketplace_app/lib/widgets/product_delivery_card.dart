@@ -5,8 +5,6 @@ import '../data/cart_delivery.dart';
 import '../data/models.dart';
 import '../design/theme.dart';
 import '../design/tokens.g.dart';
-import '../screens/shop_screen.dart';
-import '../data/shop.dart';
 import '../state/app_state.dart';
 
 /// "Delivery details" on a product page: where it would go, when it would
@@ -103,17 +101,6 @@ class _ProductDeliveryCardState extends State<ProductDeliveryCard> {
         icon: p.deliveryProfile == 'instant' ? Icons.bolt : Icons.local_shipping_outlined,
         child: option != null ? _when(option, c) : Text(_general, style: _body(c)),
       ),
-      // A single-business store has no "seller" to name; there the shop is the store.
-      if (p.soldBy != null && AppState.instance.storeConfig.mode != 'single')
-        _Row(
-          icon: Icons.storefront_outlined,
-          // Only a store that shows shops has a shop page to open.
-          onTap: p.shopId == null || !AppState.instance.storeConfig.showsShops ? null : _openShop,
-          child: Text.rich(TextSpan(children: [
-            TextSpan(text: 'Sold by ', style: _body(c).copyWith(color: c.inkMuted)),
-            TextSpan(text: p.soldBy, style: _body(c).copyWith(fontWeight: DsWeight.bold)),
-          ])),
-        ),
     ];
 
     return Column(
@@ -140,19 +127,6 @@ class _ProductDeliveryCardState extends State<ProductDeliveryCard> {
     );
   }
 
-  /// "Sold by Sharma Kirana" opens that shop's page.
-  Future<void> _openShop() async {
-    final p = widget.product;
-    final navigator = Navigator.of(context);
-    try {
-      final shop = await ShopApi.one(p.shopId!);
-      if (!mounted) return;
-      navigator.push(MaterialPageRoute(builder: (_) => ShopScreen(shop: shop)));
-    } catch (_) {
-      // A shop that cannot be read simply does not open.
-    }
-  }
-
   TextStyle _body(DsColors c) =>
       TextStyle(fontSize: DsText.base, fontWeight: DsWeight.semibold, color: c.ink);
 
@@ -173,26 +147,22 @@ class _ProductDeliveryCardState extends State<ProductDeliveryCard> {
 class _Row extends StatelessWidget {
   final IconData icon;
   final Widget child;
-  final VoidCallback? onTap;
 
-  const _Row({required this.icon, required this.child, this.onTap});
+  const _Row({required this.icon, required this.child});
 
   @override
   Widget build(BuildContext context) {
     final c = context.ds;
-    final row = Padding(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: DsSpace.s3, vertical: 14),
       child: Row(
         children: [
           Icon(icon, size: 20, color: c.inkMuted),
           const SizedBox(width: DsSpace.s3),
           Expanded(child: child),
-          if (onTap != null) Icon(Icons.chevron_right, size: 20, color: c.inkSubtle),
         ],
       ),
     );
-
-    return onTap == null ? row : InkWell(onTap: onTap, child: row);
   }
 }
 

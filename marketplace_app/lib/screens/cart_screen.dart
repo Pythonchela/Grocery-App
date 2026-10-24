@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../data/bundles.dart';
 import '../data/cart_delivery.dart';
 import '../data/models.dart';
-import '../data/shop.dart';
 import '../design/components.dart';
 import '../design/mobile.dart';
 import '../design/mobile_components.dart';
@@ -11,13 +10,11 @@ import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../state/app_state.dart';
 import '../widgets/delivery_widgets.dart';
-import '../widgets/shop_card.dart';
 import 'account_screen.dart';
 import 'address_screen.dart';
 import 'checkout_screen.dart';
 import '../widgets/option_picks.dart';
 import 'product_detail_screen.dart';
-import 'shop_screen.dart';
 
 /// The cart, laid out the way quick-commerce apps do it: the delivery promise
 /// first, what you save and how close you are to free delivery next, then the
@@ -33,18 +30,12 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final CartDelivery _delivery = CartDelivery();
 
-  // The shop the basket is from (stores that show shops), for its name, hours
-  // and minimum order.
-  Shop? _shop;
-  String? _shopFor;
-
   @override
   void initState() {
     super.initState();
     AppState.instance.addListener(_onAppState);
     _delivery.addListener(_rebuild);
     _delivery.refresh();
-    _syncShop();
   }
 
   @override
@@ -62,45 +53,6 @@ class _CartScreenState extends State<CartScreen> {
   /// The cart or the session changed; the delivery promise may have too.
   void _onAppState() {
     _delivery.refresh();
-    _syncShop();
-  }
-
-  /// Reads the basket's shop when the basket moves to a different one.
-  Future<void> _syncShop() async {
-    final state = AppState.instance;
-    final id = state.storeConfig.showsShops ? state.cartShopId : null;
-
-    if (id == null) {
-      if (_shop != null || _shopFor != null) {
-        _shop = null;
-        _shopFor = null;
-        _rebuild();
-      }
-      return;
-    }
-    if (id == _shopFor) return;
-    _shopFor = id;
-
-    try {
-      final shop = await ShopApi.one(id);
-      if (mounted && _shopFor == id) setState(() => _shop = shop);
-    } catch (_) {
-      // The basket still works without the shop's details; the server enforces
-      // its hours and minimum at checkout either way.
-    }
-  }
-
-  /// Why checkout cannot go ahead yet, from the shop's own rules; null when it can.
-  String? _blockReason(AppState state) {
-    final shop = _shop;
-    if (shop == null) return null;
-    if (!shop.isOpen) return 'Shop is closed';
-
-    final short = shop.minOrder - state.cartSubtotal;
-    if (shop.minOrder > 0 && short > 0.004) {
-      return 'Add ${formatMoney(short)} more';
-    }
-    return null;
   }
 
   Future<void> _pickAddress() async {
@@ -193,15 +145,6 @@ class _CartScreenState extends State<CartScreen> {
                     padding: const EdgeInsets.fromLTRB(
                         DsSpace.s4, DsSpace.s4, DsSpace.s4, DsSpace.s8),
                     children: [
-                      if (_shop != null) ...[
-                        _ShopStrip(
-                          shop: _shop!,
-                          subtotal: state.cartSubtotal,
-                          onOpen: () => Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => ShopScreen(shop: _shop!))),
-                        ),
-                        const SizedBox(height: DsSpace.s3),
-                      ],
                       DeliveryEtaStrip(
                         delivery: _delivery,
                         signedIn: state.isSignedIn,
@@ -355,15 +298,13 @@ class _CartScreenState extends State<CartScreen> {
                         label: 'Total',
                         amount: formatMoney(total),
                         button: BxButton(
-                          label: _blockReason(state) ??
-                              (state.isSignedIn
-                                  ? 'Proceed to checkout'
-                                  : 'Sign in to checkout'),
+                          label: state.isSignedIn
+                              ? 'Proceed to checkout'
+                              : 'Sign in to checkout',
                           size: BxButtonSize.lg,
                           fullWidth: true,
-                          trailingIcon:
-                              _blockReason(state) == null ? Icons.arrow_forward : null,
-                          onPressed: _blockReason(state) == null ? _checkout : null,
+                          trailingIcon: Icons.arrow_forward,
+                          onPressed: _checkout,
                         ),
                       ),
                     ],
@@ -606,89 +547,3 @@ class _QtyStepper extends StatelessWidget {
 }
 
 
-/// "Ordering from Sharma Kirana": whose goods these are, whether the shop is
-/// taking orders, and how far the basket is from its minimum.
-class _ShopStrip extends StatelessWidget {
-  final Shop shop;
-  final double subtotal;
-  final VoidCallback onOpen;
-
-  const _ShopStrip({required this.shop, required this.subtotal, required this.onOpen});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.ds;
-    final minimum = shop.minOrder;
-    final short = (minimum - subtotal).clamp(0, double.infinity);
-    final reached = minimum <= 0 || short <= 0.004;
-
-    return BxCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: onOpen,
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: ShopPicture(shop: shop),
-                  ),
-                ),
-                const SizedBox(width: DsSpace.s3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ordering from',
-                          style: TextStyle(fontSize: DsText.xs, color: c.inkSubtle)),
-                      Text(shop.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: DsText.base,
-                              fontWeight: DsWeight.bold,
-                              color: c.ink)),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: c.inkSubtle),
-              ],
-            ),
-          ),
-          if (!shop.isOpen) ...[
-            const SizedBox(height: DsSpace.s3),
-            BxAlert(
-              '${shop.closedText ?? 'Closed right now'}. You can keep your basket and order when it opens.',
-              title: 'Shop is closed',
-              tone: BxTone.warning,
-            ),
-          ] else if (minimum > 0) ...[
-            const SizedBox(height: DsSpace.s3),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: (subtotal / minimum).clamp(0.0, 1.0),
-                minHeight: 6,
-                backgroundColor: c.line,
-                color: reached ? c.success : c.accent,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              reached
-                  ? 'Minimum order of ${formatMoney(minimum)} reached'
-                  : 'Add ${formatMoney(short.toDouble())} more for the minimum order of ${formatMoney(minimum)}',
-              style: TextStyle(
-                  fontSize: DsText.sm,
-                  color: reached ? c.success : c.inkMuted),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}

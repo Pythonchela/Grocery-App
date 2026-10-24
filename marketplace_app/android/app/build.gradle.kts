@@ -13,9 +13,7 @@ plugins {
 // on the moment google-services.json is dropped in. Each app has its own Firebase
 // app (its own package name): src/shop/google-services.json and
 // src/vendor/google-services.json. One at android/app/ is still honoured.
-if (file("google-services.json").exists() ||
-    file("src/shop/google-services.json").exists() ||
-    file("src/vendor/google-services.json").exists()) {
+if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
 
@@ -47,33 +45,14 @@ android {
     }
 
     defaultConfig {
-        // The application id and name come from the flavor below: this repository
-        // builds two apps. The code's own package (`namespace`) is shared.
+        // Change this per client: it identifies the app on the phone and in the Play Store.
+        applicationId = "in.bazaarx.store"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    }
-
-    // Two apps from one codebase:
-    //   shop   - the shopping app, lib/main.dart
-    //   vendor - the seller app,   lib/main_vendor.dart
-    // Build them with `flutter build apk --flavor shop` and
-    // `flutter build apk --flavor vendor -t lib/main_vendor.dart`.
-    flavorDimensions += "app"
-    productFlavors {
-        create("shop") {
-            dimension = "app"
-            applicationId = "in.bazaarx.marketplace_app"
-            resValue("string", "app_name", "BazaarX")
-        }
-        create("vendor") {
-            dimension = "app"
-            applicationId = "in.bazaarx.seller"
-            resValue("string", "app_name", "BazaarX Seller")
-        }
     }
 
     signingConfigs {

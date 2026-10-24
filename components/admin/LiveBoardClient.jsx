@@ -4,8 +4,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle, Clock, RefreshCw } from 'lucide-react';
 import { apiFetch, formatINR } from '../../lib/apiClient';
 import { CANCEL_CODES } from './OrdersClient';
-import { DECLINE_REASONS } from '../seller/OrderDesk';
-import { useStoreConfig } from './useStoreConfig';
+
+/** Why a line is turned down, as codes the store can later count by cause. */
+const DECLINE_REASONS = [
+  ['OUT_OF_STOCK', 'Out of stock'],
+  ['SHOP_CLOSED', 'Shop is closed'],
+  ['CANNOT_PREPARE', 'Cannot prepare it in time'],
+  ['DAMAGED', 'Item is damaged'],
+  ['OTHER', 'Another reason'],
+];
 
 const POLL_MS = 15000;
 const COLUMNS = [
@@ -38,8 +45,6 @@ function Clock2({ at, offset }) {
  * an order with a reason code.
  */
 export default function LiveBoardClient({ token, onOpenOrders }) {
-  const store = useStoreConfig();
-  const showShops = Boolean(store?.vendors_enabled);
   const [board, setBoard] = useState({ counts: {}, data: [] });
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState('');
@@ -150,7 +155,7 @@ export default function LiveBoardClient({ token, onOpenOrders }) {
                     {o.items.map((i) => (
                       <li key={i.id} className="flex items-start justify-between gap-2">
                         <span className={i.seller_response === 'REJECTED' ? 'text-ink-subtle line-through' : 'text-ink'}>
-                          {i.title} × {i.quantity}{showShops && i.shop ? <em className="not-italic text-ink-muted"> · {i.shop}</em> : null}
+                          {i.title} × {i.quantity}
                         </span>
                         {i.seller_response === 'PENDING' && (
                           <button type="button" className="font-bold text-danger shrink-0" onClick={() => { setAction({ type: 'decline', order: o, item: i }); setReason('SHOP_CLOSED'); }}>Decline for shop</button>
@@ -171,7 +176,7 @@ export default function LiveBoardClient({ token, onOpenOrders }) {
       {action && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-inverse/70 p-4" role="dialog" aria-modal="true" aria-label={action.type === 'cancel' ? 'Cancel order' : 'Decline for shop'}>
           <div className="w-full max-w-sm space-y-3 rounded-panel bg-surface p-5">
-            <h3 className="font-black text-ink">{action.type === 'cancel' ? `Cancel ${action.order.order_number}` : `Decline ${action.item.title} for ${action.item.shop || 'the shop'}`}</h3>
+            <h3 className="font-black text-ink">{action.type === 'cancel' ? `Cancel ${action.order.order_number}` : `Decline ${action.item.title}`}</h3>
             <p className="text-xs text-ink-muted">Stock goes back on sale and the customer is refunded{action.type === 'decline' ? ' for that item' : ''}.</p>
             {action.type === 'cancel' ? (
               <select aria-label="Why is it being cancelled" value={code} onChange={(e) => setCode(e.target.value)} className={fieldCls}>

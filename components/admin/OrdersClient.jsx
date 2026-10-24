@@ -6,14 +6,12 @@ import {
 } from 'lucide-react';
 import { apiFetch, mapOrder, ORDER_STAGES, STAGE_LABELS, formatINR } from '../../lib/apiClient';
 import { OptionPicks } from '../storefront/OptionPicker';
-import { useStoreConfig } from './useStoreConfig';
 
 const PER_PAGE = 20;
 
 /** Why staff cancel an order, as codes the store can later count by cause. */
 export const CANCEL_CODES = [
   ['CUSTOMER_REQUEST', 'Customer asked to cancel'],
-  ['SELLER_UNRESPONSIVE', 'Shop is not responding'],
   ['OUT_OF_STOCK', 'Item is out of stock'],
   ['ADDRESS_UNSERVICEABLE', 'Cannot deliver to the address'],
   ['PAYMENT_ISSUE', 'Payment problem'],
@@ -45,10 +43,7 @@ const BOOKABLE = ['CONFIRMED', 'PACKED'];
  * or cancel it (which refunds a paid order).
  */
 export default function OrdersClient({ token }) {
-  const store = useStoreConfig();
-  const showSellers = store ? store.vendors_enabled : false;
-
-  const [filters, setFilters] = useState({ status: '', search: '', payment_method: '', payment_status: '', seller: '', from: '', to: '' });
+  const [filters, setFilters] = useState({ status: '', search: '', payment_method: '', payment_status: '', from: '', to: '' });
   const [searchText, setSearchText] = useState('');
   const [page, setPage] = useState(1);
   const [orders, setOrders] = useState([]);
@@ -56,7 +51,6 @@ export default function OrdersClient({ token }) {
   const [meta, setMeta] = useState({ total: 0, last_page: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [sellers, setSellers] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const requestRef = useRef(0);
 
@@ -68,13 +62,6 @@ export default function OrdersClient({ token }) {
     }, 350);
     return () => clearTimeout(t);
   }, [searchText]);
-
-  useEffect(() => {
-    if (!showSellers) return;
-    apiFetch('/admin/sellers?per_page=200', { token })
-      .then((res) => setSellers(res.data || []))
-      .catch(() => {});
-  }, [showSellers, token]);
 
   const load = useCallback(async () => {
     const ticket = ++requestRef.current;
@@ -99,7 +86,7 @@ export default function OrdersClient({ token }) {
   const setFilter = (key, value) => { setFilters((f) => ({ ...f, [key]: value })); setPage(1); };
   const clearFilters = () => {
     setSearchText('');
-    setFilters({ status: '', search: '', payment_method: '', payment_status: '', seller: '', from: '', to: '' });
+    setFilters({ status: '', search: '', payment_method: '', payment_status: '', from: '', to: '' });
     setPage(1);
   };
   const hasFilters = Object.values(filters).some(Boolean);
@@ -151,12 +138,6 @@ export default function OrdersClient({ token }) {
           <option value="REFUNDED">Refunded</option>
           <option value="FAILED">Failed</option>
         </select>
-        {showSellers && (
-          <select value={filters.seller} onChange={(e) => setFilter('seller', e.target.value)} aria-label="Shop" className={inputCls}>
-            <option value="">All shops</option>
-            {sellers.map((s) => <option key={s.id} value={s.id}>{s.display_name}</option>)}
-          </select>
-        )}
         <input type="date" value={filters.from} onChange={(e) => setFilter('from', e.target.value)} aria-label="From date" className={inputCls} />
         <span className="text-ink-subtle text-xs">to</span>
         <input type="date" value={filters.to} onChange={(e) => setFilter('to', e.target.value)} aria-label="To date" className={inputCls} />
@@ -194,9 +175,6 @@ export default function OrdersClient({ token }) {
                   </div>
                   <p className="text-xs text-ink-muted font-bold">{order.customerName}</p>
                   <p className="text-[11px] text-ink-subtle font-medium">{order.city}, {order.pincode}</p>
-                  {showSellers && order.shopNames.length > 0 && (
-                    <p className="text-[11px] text-ink-subtle font-medium truncate">{order.shopNames.join(', ')}</p>
-                  )}
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-xs font-black text-ink">{formatINR(order.totalAmount)}</span>
                     <span className="text-[10px] text-ink-subtle">{order.paymentMethod} · {order.paymentStatus}</span>
@@ -224,7 +202,6 @@ export default function OrdersClient({ token }) {
             key={selected._id}
             order={selected}
             token={token}
-            showSellers={showSellers}
             onClose={() => setSelectedId(null)}
             onChanged={(patch) => { replaceOrder({ _id: selected._id, ...patch }); load(); }}
           />
@@ -234,7 +211,7 @@ export default function OrdersClient({ token }) {
   );
 }
 
-function OrderDetail({ order, token, showSellers, onClose, onChanged }) {
+function OrderDetail({ order, token, onClose, onChanged }) {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -417,7 +394,7 @@ function OrderDetail({ order, token, showSellers, onClose, onChanged }) {
             <div key={i} className="flex items-center justify-between py-2 border-b border-line last:border-0">
               <div>
                 <p className="font-bold text-ink text-xs">{item.title}</p>
-                <p className="text-[11px] text-ink-subtle">Qty: {item.qty}{showSellers && item.seller ? ` · Sold by ${item.seller}` : ''}</p>
+                <p className="text-[11px] text-ink-subtle">Qty: {item.qty}</p>
                 <OptionPicks picks={item.picks} className="mt-0.5" />
               </div>
               <span className="font-black text-ink text-sm">{formatINR(item.price * item.qty)}</span>

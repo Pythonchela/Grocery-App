@@ -5,9 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { brand } from '@ds/brand';
 import { useBrandLogo } from './BrandProvider';
 import { StoreProvider, useStore } from './StoreProvider';
-import { sellerEntry } from '../../lib/sellerNav';
-import { offersSelling } from '../../lib/shopRules';
-import ShopSwitchDialog from '../storefront/ShopSwitchDialog';
 import { FeatureFlagProvider } from './FeatureFlagProvider';
 import Navbar from '../Navbar';
 import CheckoutDrawer from '../CheckoutDrawer';
@@ -18,9 +15,6 @@ function LayoutInner({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const isAdmin = pathname?.startsWith('/admin');
-  // The seller's dashboard has its own left-hand navigation; the shopper's header and footer
-  // would only put customer options in front of someone who is here to run a shop.
-  const isSellerDesk = pathname === '/seller' || pathname?.startsWith('/seller/');
 
   const {
     cartItems,
@@ -32,14 +26,10 @@ function LayoutInner({ children }) {
     handleUpdateQty,
     handleRemoveItem,
     clearCart,
-    sellerState,
-    storeConfig,
   } = useStore();
 
-  // Same helper the navbar uses, so the footer can't drift from it.
-  const sellerLink = offersSelling(storeConfig) ? sellerEntry(sellerState) : null;
 
-  if (isAdmin || isSellerDesk) {
+  if (isAdmin) {
     return <>{children}</>;
   }
 
@@ -124,10 +114,6 @@ function LayoutInner({ children }) {
                   {label:'About Us', href:'#'},
                   {label:'Privacy Policy', href:'#'},
                   {label:'Terms of Service', href:'#'},
-                  // Was a dead '#'. Selling is a thing you *do* here, not a
-                  // support topic, so it belongs in Company rather than buried
-                  // under Help — and the label follows the account's state.
-                  ...(sellerLink ? [{label: sellerLink.label, href: sellerLink.href}] : []),
                   {label:'BIS IS 19000 Compliance', href:'#'},
                 ].map(l=>(
                   <li key={l.label}><a href={l.href} className="hover:text-ink transition">{l.label}</a></li>
@@ -148,7 +134,6 @@ function LayoutInner({ children }) {
         </div>
       </footer>
 
-      <ShopSwitchDialog />
 
       <CheckoutDrawer 
         isOpen={isCartOpen}

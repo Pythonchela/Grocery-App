@@ -18,7 +18,6 @@ import 'product_detail_screen.dart';
 import 'notifications_screen.dart';
 import 'reels_screen.dart';
 import 'search_screen.dart';
-import 'shops_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -223,74 +222,64 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              if (AppState.instance.storeConfig.shopsFirst) ...[
-                // A vendors-only store: shoppers pick a shop first, then its items.
-                const _ShopsHeading(),
-                const SliverToBoxAdapter(child: ShopsFeed()),
-                const SliverToBoxAdapter(child: SizedBox(height: DsSpace.s10)),
-              ] else ...[
-                if (AppState.instance.storeConfig.showsShops &&
-                    AppState.instance.storeConfig.homeShowsShops)
-                  const SliverToBoxAdapter(child: ShopsRail()),
-                if (_sections.isNotEmpty && !_loading)
-                  ..._sectionSlivers()
+              if (_sections.isNotEmpty && !_loading)
+                ..._sectionSlivers()
+              else ...[
+                SliverToBoxAdapter(
+                    child: _Hero(
+                        imageUrl:
+                            _featured.isEmpty ? null : _featured.first.image,
+                        onShopNow:
+                            _categories.isEmpty ? null : _openCategoryList)),
+                if (_loading)
+                  const SliverToBoxAdapter(child: _HomeSkeleton())
                 else ...[
+                  const SliverToBoxAdapter(
+                      child: SizedBox(height: DsSpace.s4)),
                   SliverToBoxAdapter(
-                      child: _Hero(
-                          imageUrl:
-                              _featured.isEmpty ? null : _featured.first.image,
-                          onShopNow:
-                              _categories.isEmpty ? null : _openCategoryList)),
-                  if (_loading)
-                    const SliverToBoxAdapter(child: _HomeSkeleton())
-                  else ...[
-                    const SliverToBoxAdapter(
-                        child: SizedBox(height: DsSpace.s4)),
+                      child: CategoryShortcuts(
+                          scrollable: true,
+                          categories: _categories,
+                          onSelected: (category) => Navigator.of(context)
+                              .push(MaterialPageRoute(
+                                  builder: (_) => CategoryScreen(
+                                      category: category,
+                                      siblings: _categories))))),
+                  if (_trending.isNotEmpty) ...[
+                    const _SectionHeader(
+                      title: 'Trending now',
+                    ),
                     SliverToBoxAdapter(
-                        child: CategoryShortcuts(
-                            scrollable: true,
-                            categories: _categories,
-                            onSelected: (category) => Navigator.of(context)
-                                .push(MaterialPageRoute(
-                                    builder: (_) => CategoryScreen(
-                                        category: category,
-                                        siblings: _categories))))),
-                    if (_trending.isNotEmpty) ...[
-                      const _SectionHeader(
-                        title: 'Trending now',
-                      ),
-                      SliverToBoxAdapter(
-                        child: ProductRail(
-                            products: _trending, onTap: _openProduct),
-                      ),
-                    ],
-                    if (_hasReels)
-                      SliverToBoxAdapter(
-                        child: ReelsPromo(
-                          section: const HomeSection(
-                              id: 'reels', type: HomeSectionType.reels),
-                          onOpen: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const ReelsScreen()),
-                          ),
+                      child: ProductRail(
+                          products: _trending, onTap: _openProduct),
+                    ),
+                  ],
+                  if (_hasReels)
+                    SliverToBoxAdapter(
+                      child: ReelsPromo(
+                        section: const HomeSection(
+                            id: 'reels', type: HomeSectionType.reels),
+                        onOpen: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const ReelsScreen()),
                         ),
                       ),
-                    if (_forYou.isNotEmpty) ...[
-                      const _SectionHeader(
-                        title: 'Recommended for you',
-                      ),
-                      SliverToBoxAdapter(
-                        child:
-                            ProductRail(products: _forYou, onTap: _openProduct),
-                      ),
-                    ],
-                    _AllItems(
-                      products: _featured,
-                      onOpen: _openProduct,
                     ),
-                    const SliverToBoxAdapter(
-                        child: SizedBox(height: DsSpace.s10)),
+                  if (_forYou.isNotEmpty) ...[
+                    const _SectionHeader(
+                      title: 'Recommended for you',
+                    ),
+                    SliverToBoxAdapter(
+                      child:
+                          ProductRail(products: _forYou, onTap: _openProduct),
+                    ),
                   ],
+                  _AllItems(
+                    products: _featured,
+                    onOpen: _openProduct,
+                  ),
+                  const SliverToBoxAdapter(
+                      child: SizedBox(height: DsSpace.s10)),
                 ],
               ],
             ],
@@ -718,27 +707,3 @@ class _HomeSkeleton extends StatelessWidget {
   }
 }
 
-/// "Shops near you" over the shop list of a vendors-only store's home screen.
-class _ShopsHeading extends StatelessWidget {
-  const _ShopsHeading();
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.ds;
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-            DsSpace.s4, DsSpace.s4, DsSpace.s4, DsSpace.s3),
-        child: Text(
-          'Order from a shop',
-          style: TextStyle(
-            fontFamily: DsFont.display,
-            fontSize: DsText.xl,
-            fontWeight: DsWeight.black,
-            color: c.ink,
-          ),
-        ),
-      ),
-    );
-  }
-}

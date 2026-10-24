@@ -114,7 +114,6 @@ export default function ReturnsSection({ token }) {
                 {r.user?.name} · Order {r.order?.order_number} · {r.reason}
               </p>
               {r.comments && <p className="text-[11px] text-ink-subtle font-medium italic mt-1">"{r.comments}"</p>}
-              {r.seller_recommendation && <p className="text-xs font-semibold text-ink mt-2">Seller recommendation: {r.seller_recommendation.replaceAll('_', ' ').toLowerCase()} · {r.seller_note}</p>}
               <p className="text-[10px] text-ink-subtle font-medium mt-1">Raised {formatDate(r.created_at)}</p>
             </div>
             <div className="text-right shrink-0">

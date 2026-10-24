@@ -32,18 +32,20 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  /// All builds use the live backend unless a developer explicitly overrides it.
-  /// For a local Android emulator, pass
-  /// `--dart-define=API_BASE=http://10.0.2.2:8000/api/v1`.
+  /// Where the store's API lives. Every build must say so:
+  /// `--dart-define=API_BASE=https://api.their-store.com/api/v1`. Without it the app
+  /// looks for an API on the computer running the Android emulator, so a build made
+  /// by mistake can never reach someone else's live store.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE',
-    defaultValue: 'https://api.rentalmoney.in/api/v1',
+    defaultValue: 'http://10.0.2.2:8001/api/v1',
   );
 
-  /// Public storefront origin, used to build links shoppers can share.
+  /// Public storefront origin, used to build links shoppers can share:
+  /// `--dart-define=WEB_BASE=https://their-store.com`.
   static const String webBase = String.fromEnvironment(
     'WEB_BASE',
-    defaultValue: 'https://rentalmoney.in',
+    defaultValue: 'http://localhost:3000',
   );
 
   /// Called when the API rejects a token we sent — the session is dead and the

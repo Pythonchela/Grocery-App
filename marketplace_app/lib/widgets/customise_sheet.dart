@@ -7,7 +7,6 @@ import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../state/app_state.dart';
 import 'option_picker.dart';
-import 'shop_switch.dart';
 
 /// Opens the "customise" sheet for a product that needs a choice first (a size,
 /// a portion, add-ons) so the shopper adds it without leaving the list they
@@ -21,12 +20,6 @@ Future<bool> showCustomiseSheet(
   Variant? initialVariant,
   OptionSelection? initialSelection,
 }) async {
-  // A different shop's item: ask whether to start a new basket before choosing.
-  // The old basket stays until the item is actually added, so cancelling the
-  // sheet afterwards does not lose it.
-  if (!await confirmShopSwitch(context, product, clear: false)) return false;
-  if (!context.mounted) return false;
-
   final added = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -82,9 +75,6 @@ class _CustomiseSheetState extends State<CustomiseSheet> {
     }
 
     final state = AppState.instance;
-    // The shopper already agreed to a new basket; swap it now that they commit.
-    if (state.shopConflictFor(_p) != null) state.clearCart();
-
     final ok = state.addToCart(_p, variant: _variant, selection: _selection);
     if (!ok) {
       setState(() => _message = 'Maximum available quantity reached');

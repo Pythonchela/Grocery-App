@@ -84,7 +84,7 @@ export default function SupportInboxClient() {
           <div className="flex gap-2">
             <input aria-label="Search tickets" className={field} placeholder="Search number, subject or person" value={q} onChange={(e) => setQ(e.target.value)} />
             <select aria-label="Who raised it" className={`${field} max-w-32`} value={kind} onChange={(e) => setKind(e.target.value)}>
-              <option value="">Everyone</option><option value="customer">Shoppers</option><option value="seller">Sellers</option>
+              <option value="">Everyone</option><option value="customer">Shoppers</option>
             </select>
           </div>
           {list.data.length === 0 && <p className="rounded-card border border-dashed border-line p-6 text-center text-xs text-ink-muted">Nothing here.</p>}
@@ -96,7 +96,7 @@ export default function SupportInboxClient() {
                     <strong className="text-sm text-ink">{t.subject}</strong>
                     <span className={`text-[10px] font-black uppercase ${PRIORITY_TONE[t.priority]}`}>{t.priority}</span>
                   </span>
-                  <span className="block text-[11px] text-ink-muted">{t.number} · {t.kind === 'SELLER' ? `Seller${t.shop ? ` ${t.shop}` : ''}` : 'Shopper'} · {t.requester_name}</span>
+                  <span className="block text-[11px] text-ink-muted">{t.number} · Shopper · {t.requester_name}</span>
                   <span className="block text-[11px] text-ink-muted">{categoryLabel(t.category)} · {STATUS_TEXT[t.status]}{t.assignee_name ? ` · ${t.assignee_name}` : ' · unassigned'}</span>
                   {t.overdue && <span className="block text-[11px] font-black text-danger">No reply yet — due {when(t.sla_due_at)}</span>}
                 </button>

@@ -14,7 +14,6 @@ import '../widgets/option_picker.dart';
 import '../widgets/product_delivery_card.dart';
 import '../widgets/product_details_tabs.dart';
 import '../widgets/product_gallery.dart';
-import '../widgets/shop_switch.dart';
 import '../widgets/product_questions.dart';
 import '../widgets/product_rail.dart';
 import 'cart_screen.dart';
@@ -95,10 +94,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ..showSnackBar(SnackBar(content: Text(problem)));
       return;
     }
-
-    // A different shop's item: ask whether to start a new basket first.
-    if (!await confirmShopSwitch(context, p)) return;
-    if (!mounted) return;
 
     final added = AppState.instance
         .addToCart(p, variant: _variant, selection: _selection);

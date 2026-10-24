@@ -12,7 +12,6 @@ import 'account_screen.dart';
 import 'cart_screen.dart';
 import 'order_detail_screen.dart';
 import '../widgets/option_picks.dart';
-import '../widgets/shop_switch.dart';
 import 'order_tracking_screen.dart';
 
 /// Where an order sits, in the four buckets a shopper thinks in.
@@ -130,10 +129,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
         try {
           final data = await ApiClient.request('/products/${item.productId}');
           final product = Product.fromJson(data as Map<String, dynamic>);
-          // A basket from another shop: ask once, before the first item goes in.
-          if (added == 0 && unavailable == 0) {
-            if (!mounted || !await confirmShopSwitch(context, product)) return;
-          }
           final variant =
               product.variants.where((v) => v.id == item.variantId && v.stock > 0).firstOrNull ??
                   product.variants.where((v) => v.stock > 0).firstOrNull;

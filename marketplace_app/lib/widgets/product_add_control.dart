@@ -6,7 +6,6 @@ import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../state/app_state.dart';
 import 'customise_sheet.dart';
-import 'shop_switch.dart';
 
 /// The add-to-cart control you meet on every product in a shopping app: a small
 /// "ADD" that turns into "- 2 +" once the item is in the cart.
@@ -50,10 +49,6 @@ class ProductAddControl extends StatelessWidget {
   Future<void> _add(BuildContext context) async {
     DsHaptics.tap();
     if (onAdd != null) return onAdd!();
-
-    // A different shop's item: ask whether to start a new basket first.
-    if (!await confirmShopSwitch(context, product)) return;
-    if (!context.mounted) return;
 
     // The control turning into "- 1 +" is the confirmation; only a refusal
     // needs saying.

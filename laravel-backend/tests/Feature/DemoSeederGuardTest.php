@@ -24,6 +24,6 @@ class DemoSeederGuardTest extends TestCase
         }
 
         $this->assertSame(0, User::where('email', 'admin@bazaarx.com')->count());
-        $this->assertSame(0, User::where('email', 'admin@rentalmoney.in')->count());
+        $this->assertSame(0, User::where('email', 'admin@example.com')->count());
     }
 }
