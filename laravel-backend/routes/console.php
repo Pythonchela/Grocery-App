@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('payments:refund-unclaimed')->everyTenMinutes()->withoutOverlapping();
 
 // Orders a shop never answered are turned down; items switched off "until 6pm" come back.
-Schedule::command('orders:expire-unaccepted')->everyMinute()->withoutOverlapping();
 Schedule::command('catalog:restore-availability')->everyMinute()->withoutOverlapping();
 
 // Resolved support tickets nobody replied to close by themselves.

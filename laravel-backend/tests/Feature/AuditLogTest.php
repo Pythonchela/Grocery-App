@@ -46,22 +46,6 @@ class AuditLogTest extends TestCase
         $this->assertNull(AuditLog::where('action', 'test.system')->first()->actor_id);
     }
 
-    public function test_money_decisions_are_recorded_with_who_made_them(): void
-    {
-        $seller = $this->seller();
-        app(SellerPayoutService::class)->adjust($seller, 1000, 'credit');
-        $request = PayoutRequest::create(['seller_id' => $seller->id, 'amount' => 500, 'requested_at' => now()]);
-        $admin = $this->admin();
-
-        $this->actingAs($admin, 'sanctum')->postJson("/api/v1/admin/payout-requests/{$request->id}/pay", ['reference' => 'UTR9'])->assertOk();
-        $this->actingAs($admin, 'sanctum')->postJson("/api/v1/admin/sellers/{$seller->id}/payout-adjustment", ['amount' => -50, 'note' => 'chargeback'])->assertSuccessful();
-
-        $paid = AuditLog::where('action', 'payout.paid')->firstOrFail();
-        $this->assertSame($admin->id, $paid->actor_id);
-        $this->assertSame('UTR9', $paid->meta['reference']);
-        $this->assertTrue(AuditLog::where('action', 'payout.adjusted')->exists());
-    }
-
     public function test_access_changes_are_recorded_and_never_contain_a_password(): void
     {
         $admin = $this->admin();
@@ -73,19 +57,6 @@ class AuditLogTest extends TestCase
         $this->assertTrue(AuditLog::where('action', 'user.blocked')->exists());
         $this->assertTrue(AuditLog::where('action', 'staff.password_reset')->exists());
         $this->assertStringNotContainsString('a-very-long-password-1', json_encode(AuditLog::all()->toArray()));
-    }
-
-    public function test_seller_terms_changes_are_recorded_only_when_something_changed(): void
-    {
-        $seller = $this->seller();
-        $admin = $this->admin();
-
-        $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/sellers/{$seller->id}", ['tagline' => 'Nice shop'])->assertOk();
-        $this->assertFalse(AuditLog::where('action', 'seller.terms_changed')->exists());
-
-        $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/sellers/{$seller->id}", ['commission_rate' => 15])->assertOk();
-        $row = AuditLog::where('action', 'seller.terms_changed')->firstOrFail();
-        $this->assertArrayHasKey('commission_rate', $row->meta);
     }
 
     public function test_only_full_admins_can_read_the_trail_and_it_can_be_filtered(): void

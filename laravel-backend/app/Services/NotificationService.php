@@ -99,28 +99,6 @@ class NotificationService
         }
     }
 
-    /**
-     * Tell an applicant what the team decided. Without this a seller waits on a
-     * page they have to keep reopening, and a turned-down application (which is a
-     * request to correct something) would never be noticed.
-     */
-    public function sellerApplicationDecided(\App\Models\Seller $seller, bool $approved, ?string $reason = null): void
-    {
-        if (! $seller->user) {
-            return;
-        }
-
-        $this->send(
-            $seller->user,
-            'SELLER_APPLICATION',
-            $approved ? 'Your shop is approved' : 'Your application needs changes',
-            $approved
-                ? 'You can now add products and receive orders. Open the seller dashboard to get started.'
-                : 'Reason: '.($reason ?: 'see your application').'. Fix it and send it again.',
-            ['seller_application' => true],
-        );
-    }
-
     public function orderStatusChanged($order, string $status): void
     {
         $labels = [

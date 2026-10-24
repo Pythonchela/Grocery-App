@@ -71,16 +71,16 @@ class SellerPickupDeliveryTest extends TestCase
 
     // ── Who may set a pickup address, and what is checked ─────────────────
 
-    public function test_a_seller_sets_their_own_pickup_address(): void
+    public function test_the_owner_sets_the_stores_pickup_address(): void
     {
-        $seller = $this->seller();
+        $admin = User::factory()->create(['role' => 'ADMIN', 'status' => 'ACTIVE']);
 
-        $this->actingAs($seller->user, 'sanctum')->putJson('/api/v1/seller/me', [
+        $this->actingAs($admin, 'sanctum')->putJson('/api/v1/admin/store', [
             'pickup_line1' => '12 Koramangala', 'pickup_city' => 'Bengaluru', 'pickup_state' => 'Karnataka',
             'pickup_pincode' => '560034', 'pickup_phone' => '98 1111 1111', 'pickup_lat' => 12.9352, 'pickup_lng' => 77.6245,
         ])->assertOk();
 
-        $this->actingAs($seller->user, 'sanctum')->getJson('/api/v1/seller/me')
+        $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/store')
             ->assertOk()
             ->assertJsonPath('data.pickup_pincode', '560034')
             ->assertJsonPath('data.has_pickup_address', true);
@@ -88,33 +88,32 @@ class SellerPickupDeliveryTest extends TestCase
 
     public function test_a_bad_pincode_or_coordinate_is_refused(): void
     {
-        $seller = $this->seller();
+        $admin = User::factory()->create(['role' => 'ADMIN', 'status' => 'ACTIVE']);
 
-        $this->actingAs($seller->user, 'sanctum')->putJson('/api/v1/seller/me', ['pickup_pincode' => '12345'])
+        $this->actingAs($admin, 'sanctum')->putJson('/api/v1/admin/store', ['pickup_pincode' => '12345'])
             ->assertStatus(422)->assertJsonValidationErrors('pickup_pincode');
-        $this->actingAs($seller->user, 'sanctum')->putJson('/api/v1/seller/me', ['pickup_lat' => 400])
+        $this->actingAs($admin, 'sanctum')->putJson('/api/v1/admin/store', ['pickup_lat' => 400])
             ->assertStatus(422)->assertJsonValidationErrors('pickup_lat');
     }
 
-    public function test_a_seller_cannot_change_someone_elses_pickup(): void
+    public function test_shoppers_cannot_see_or_change_the_stores_profile(): void
     {
-        $mine = $this->seller();
-        $theirs = $this->bengaluruSeller();
+        $customer = User::factory()->create(['role' => 'CUSTOMER', 'status' => 'ACTIVE']);
 
-        // The seller route only ever edits the signed-in seller's own row.
-        $this->actingAs($mine->user, 'sanctum')->putJson('/api/v1/seller/me', ['pickup_pincode' => '110001', 'pickup_line1' => 'x']);
-
-        $this->assertSame('560034', $theirs->fresh()->pickup_pincode);
+        $this->getJson('/api/v1/admin/store')->assertUnauthorized();
+        $this->actingAs($customer, 'sanctum')->getJson('/api/v1/admin/store')->assertForbidden();
+        $this->actingAs($customer, 'sanctum')->putJson('/api/v1/admin/store', ['pickup_pincode' => '110001'])->assertForbidden();
     }
 
-    public function test_an_admin_can_set_any_sellers_pickup(): void
+    public function test_the_owner_can_pause_orders_for_a_while_and_resume(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN', 'status' => 'ACTIVE']);
-        $seller = $this->seller();
 
-        $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/sellers/{$seller->id}", [
-            'pickup_line1' => '5 Linking Road', 'pickup_pincode' => '400050', 'pickup_city' => 'Mumbai',
-        ])->assertOk()->assertJsonPath('data.pickup_pincode', '400050');
+        $this->actingAs($admin, 'sanctum')->putJson('/api/v1/admin/store', ['pause_minutes' => 60])->assertOk();
+        $this->assertFalse(\App\Models\Seller::house()->isOpenNow());
+
+        $this->actingAs($admin, 'sanctum')->putJson('/api/v1/admin/store', ['pause_minutes' => 0])->assertOk();
+        $this->assertTrue(\App\Models\Seller::house()->isOpenNow());
     }
 
     // ── Where a parcel starts ─────────────────────────────────────────────

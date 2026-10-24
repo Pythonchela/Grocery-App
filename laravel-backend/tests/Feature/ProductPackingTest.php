@@ -46,15 +46,6 @@ class ProductPackingTest extends TestCase
         $this->getJson("/api/v1/products/{$id}")->assertJsonPath('data.weight_grams', 1200);
     }
 
-    public function test_a_seller_can_set_them_on_their_own_product(): void
-    {
-        $user = User::factory()->create(['role' => User::ROLE_SELLER, 'status' => 'ACTIVE']);
-        Seller::factory()->create(['user_id' => $user->id]);
-
-        $this->actingAs($user, 'sanctum')->postJson('/api/v1/products', $this->payload(['weight_grams' => 350]))
-            ->assertCreated()->assertJsonPath('data.weight_grams', 350);
-    }
-
     public function test_they_can_be_changed_and_cleared(): void
     {
         $admin = $this->admin();

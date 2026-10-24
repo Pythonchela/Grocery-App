@@ -248,18 +248,6 @@ class ProductDetailsTest extends TestCase
         $this->assertNull(Product::findOrFail($id)->specifications);
     }
 
-    public function test_a_seller_can_fill_in_the_details_of_their_own_product(): void
-    {
-        $user = User::factory()->create(['role' => User::ROLE_SELLER, 'status' => 'ACTIVE']);
-        Seller::factory()->create(['user_id' => $user->id, 'status' => 'ACTIVE']);
-
-        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/products', $this->payload([
-            'specifications' => [['title' => 'General', 'rows' => [['label' => 'Fit', 'value' => 'Slim']]]],
-        ]))->assertCreated();
-
-        $response->assertJsonPath('data.specifications.0.rows.0.value', 'Slim');
-    }
-
     // ── Colours' own photos ──────────────────────────────────────────────
 
     public function test_a_colour_can_have_its_own_photos(): void

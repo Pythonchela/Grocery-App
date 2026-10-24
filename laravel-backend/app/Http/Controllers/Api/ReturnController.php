@@ -249,16 +249,6 @@ class ReturnController extends Controller
             }
             \App\Services\Options\ProductOptions::restock($return->orderItem, (int) $return->quantity);
 
-            // Claw back the seller's share of what's going back, including the
-            // platform's commission on it — we don't keep a cut of a sale the
-            // customer returned.
-            app(\App\Services\SellerPayoutService::class)->debitRefund(
-                $return->orderItem,
-                $return->order,
-                (int) $return->quantity,
-                (float) $return->refund_amount,
-            );
-
             if ($return->kind === 'EXCHANGE') {
                 // Replacement order for the swapped variant. Every column here
                 // is one that exists on `orders` — the previous version wrote

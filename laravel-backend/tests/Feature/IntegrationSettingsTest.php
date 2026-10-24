@@ -368,7 +368,6 @@ class IntegrationSettingsTest extends TestCase
         $admin = $this->admin();
 
         $this->save($admin, 'gemini', ['api_key' => 'has spaces in it and is long enough'])->assertStatus(422)->assertJsonValidationErrors('values.api_key');
-        $this->save($admin, 'marketplace', ['default_commission_rate' => 75])->assertStatus(422)->assertJsonValidationErrors('values.default_commission_rate');
         $this->save($admin, 'google', ['client_id' => 'not-a-client-id'])->assertStatus(422)->assertJsonValidationErrors('values.client_id');
         $this->save($admin, 'shipping', ['pickup_pincode' => '12'])->assertStatus(422);
         $this->save($admin, 'nonexistent', ['a' => 'b'])->assertNotFound();
@@ -653,19 +652,13 @@ class IntegrationSettingsTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_groups_with_nothing_to_test_say_so(): void
-    {
-        $this->actingAs($this->admin(), 'sanctum')->postJson('/api/v1/admin/integrations/marketplace/test')
-            ->assertOk()->assertJsonPath('data.status', 'unavailable');
-    }
-
     // ── Listing ─────────────────────────────────────────────────────────
 
     public function test_every_group_is_described_with_a_status(): void
     {
         $groups = $this->actingAs($this->admin(), 'sanctum')->getJson('/api/v1/admin/integrations')->assertOk()->json('data.groups');
 
-        $this->assertSame(['gemini', 'google', 'push', 'email', 'sms', 'storage', 'couriers', 'shipping', 'marketplace'], array_column($groups, 'id'));
+        $this->assertSame(['gemini', 'google', 'push', 'email', 'sms', 'storage', 'couriers', 'shipping'], array_column($groups, 'id'));
 
         foreach ($groups as $group) {
             $this->assertContains($group['status'], ['configured', 'partial', 'missing', 'local']);

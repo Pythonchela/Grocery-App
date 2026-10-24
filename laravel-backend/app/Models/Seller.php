@@ -268,32 +268,10 @@ class Seller extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function ledgerEntries()
-    {
-        return $this->hasMany(SellerLedgerEntry::class);
-    }
-
-    public function kyc()
-    {
-        return $this->hasOne(SellerKycProfile::class);
-    }
-
-    public function documents()
-    {
-        return $this->hasMany(SellerDocument::class);
-    }
-
-    /**
-     * Whether this account may be switched on.
-     *
-     * The house seller is the platform itself and has nobody to verify. Every
-     * other merchant needs approved KYC before they can list anything or accrue
-     * a payout balance — that check is the whole reason public seller signup is
-     * safe to offer at all.
-     */
+    /** The store itself is always switched on; there is nobody else to verify. */
     public function mayBeActivated(): bool
     {
-        return $this->is_house || (bool) $this->kyc?->isApproved();
+        return $this->is_house;
     }
 
     /** Validation for the pickup fields; shared by the seller's and the admin's forms. */

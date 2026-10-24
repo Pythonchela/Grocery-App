@@ -31,11 +31,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     // its own payloads. Public because the gateway is not a logged-in user.
     Route::post('/webhooks/payments/{provider}', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handle']);
 
-    // What kind of store this is (single business, vendors, shops first...), and
-    // the shops themselves, for apps that let shoppers pick a shop first.
-    Route::get('/config', [\App\Http\Controllers\Api\ShopController::class, 'config']);
-    Route::get('/shops', [\App\Http\Controllers\Api\ShopController::class, 'index']);
-    Route::get('/shops/{shop}', [\App\Http\Controllers\Api\ShopController::class, 'show']);
+    // What kind of store this is, for the apps.
+    Route::get('/config', [\App\Http\Controllers\Api\StoreController::class, 'config']);
 
     // Delivery partners push shipment updates here; each is authenticated by its own secret.
     Route::post('/webhooks/delivery/{carrier}', [\App\Http\Controllers\Api\DeliveryWebhookController::class, 'handle']);
@@ -65,8 +62,6 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/{id}', [CategoryController::class, 'update']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
-        Route::get('/admin/category-requests', [\App\Http\Controllers\Api\CategoryRequestController::class, 'adminIndex']);
-        Route::put('/admin/category-requests/{id}', [\App\Http\Controllers\Api\CategoryRequestController::class, 'decide']);
     });
 
     // ── Products — public reads, admin writes ────────────────────────────
@@ -83,9 +78,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         Route::post('/admin/products/import/commit', [\App\Http\Controllers\Api\ProductImportController::class, 'commit']);
     });
 
-    // Catalog writes are open to staff and to active sellers. The middleware
-    // grants entry; ProductController enforces per-row ownership, so a seller
-    // reaching these routes still cannot touch another seller's listing.
+    // Catalog writes: staff only.
     Route::middleware(['auth:sanctum', 'can-manage-catalog'])->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{id}', [ProductController::class, 'update']);
@@ -97,101 +90,13 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
             ->middleware('throttle:sensitive-write');
     });
 
-    // ── Seller onboarding ────────────────────────────────────────────────
-    // Open to any signed-in customer, but it only ever produces a PENDING
-    // account — nothing here can switch a shop on.
-    Route::middleware('auth:sanctum')->post('/sellers/apply', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'apply'])
-        ->middleware('throttle:sensitive-write');
-
-    // Reachable while PENDING, which is the whole point: this is the flow that
-    // makes an account active. 'seller.account' checks existence, not standing.
-    Route::middleware(['auth:sanctum', 'seller.account'])->prefix('seller/onboarding')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'show']);
-        Route::put('/kyc', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'saveKyc']);
-        Route::post('/documents', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'uploadDocument'])
-            ->middleware('throttle:sensitive-write');
-        Route::delete('/documents/{id}', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'deleteDocument']);
-        Route::post('/submit', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'submit'])
-            ->middleware('throttle:sensitive-write');
-    });
-
-    // Identity documents are never on a public URL. This streams one to the
-    // seller it belongs to, or to staff reviewing it, and to nobody else.
-    Route::middleware('auth:sanctum')
-        ->get('/seller/documents/{id}/download', [\App\Http\Controllers\Api\SellerOnboardingController::class, 'downloadDocument']);
-
-    // ── Sellers ──────────────────────────────────────────────────────────
-    // The merchant's own shop. Every query inside is scoped to their seller id.
-    Route::middleware(['auth:sanctum', 'seller'])->prefix('seller')->group(function () {
-        Route::get('/me', [\App\Http\Controllers\Api\SellerController::class, 'me']);
-        Route::put('/me', [\App\Http\Controllers\Api\SellerController::class, 'update']);
-        Route::get('/products', [\App\Http\Controllers\Api\SellerController::class, 'products']);
-        Route::get('/category-requests', [\App\Http\Controllers\Api\CategoryRequestController::class, 'sellerIndex']);
-        Route::post('/category-requests', [\App\Http\Controllers\Api\CategoryRequestController::class, 'sellerStore']);
-        Route::get('/order-items', [\App\Http\Controllers\Api\SellerController::class, 'orderItems']);
-        // Packing and shipping their own lines. Each answers with the updated
-        // line; the order's status is rolled up from its lines server-side.
-        Route::post('/order-items/{id}/pack', [\App\Http\Controllers\Api\SellerController::class, 'packItem'])
-            ->middleware('throttle:sensitive-write');
-        Route::post('/order-items/{id}/accept', [\App\Http\Controllers\Api\SellerController::class, 'acceptItem'])
-            ->middleware('throttle:sensitive-write');
-        Route::post('/order-items/{id}/reject', [\App\Http\Controllers\Api\SellerController::class, 'rejectItem'])
-            ->middleware('throttle:sensitive-write');
-        Route::put('/products/{id}/availability', [\App\Http\Controllers\Api\SellerController::class, 'setAvailability']);
-        Route::post('/order-items/{id}/ship', [\App\Http\Controllers\Api\SellerController::class, 'shipItem'])
-            ->middleware('throttle:sensitive-write');
-        Route::get('/ledger', [\App\Http\Controllers\Api\SellerController::class, 'ledger']);
-        Route::get('/money', [\App\Http\Controllers\Api\SellerMoneyController::class, 'show']);
-        Route::post('/payout-requests', [\App\Http\Controllers\Api\SellerMoneyController::class, 'requestPayout'])
-            ->middleware('throttle:sensitive-write');
-        Route::delete('/payout-requests/{id}', [\App\Http\Controllers\Api\SellerMoneyController::class, 'cancelPayout']);
-        Route::post('/bank', [\App\Http\Controllers\Api\SellerMoneyController::class, 'changeBank'])
-            ->middleware('throttle:sensitive-write');
-        Route::delete('/bank/pending', [\App\Http\Controllers\Api\SellerMoneyController::class, 'withdrawBankChange']);
-        Route::get('/statements', [\App\Http\Controllers\Api\SellerMoneyController::class, 'statementMonths']);
-        Route::get('/statements/{month}', [\App\Http\Controllers\Api\SellerMoneyController::class, 'statement']);
-        Route::get('/statements/{month}/csv', [\App\Http\Controllers\Api\SellerMoneyController::class, 'statementCsv']);
-        Route::get('/overview', [\App\Http\Controllers\Api\SellerController::class, 'overview']);
-        Route::get('/reviews', [\App\Http\Controllers\Api\SellerController::class, 'reviews']);
-        Route::put('/reviews/{id}/reply', [\App\Http\Controllers\Api\SellerController::class, 'replyToReview']);
-        Route::get('/questions', [\App\Http\Controllers\Api\SellerController::class, 'questions']);
-        Route::get('/returns', [\App\Http\Controllers\Api\SellerController::class, 'returns']);
-        Route::put('/returns/{id}/review', [\App\Http\Controllers\Api\SellerController::class, 'reviewReturn']);
-        Route::get('/coupons', [CouponController::class, 'sellerIndex']);
-        Route::post('/coupons', [CouponController::class, 'sellerStore']);
-        Route::put('/coupons/{id}', [CouponController::class, 'sellerUpdate']);
-        Route::delete('/coupons/{id}', [CouponController::class, 'sellerDestroy']);
-        Route::post('/products/import/preview', [\App\Http\Controllers\Api\ProductImportController::class, 'preview']);
-        Route::post('/products/import/commit', [\App\Http\Controllers\Api\ProductImportController::class, 'commit']);
-    });
-
-    // Onboarding and commercial terms are staff-only — there is deliberately no
-    // public seller signup, since a self-registered storefront can list products
-    // and accrue a payout balance.
+    // ── Store ────────────────────────────────────────────────────────────
+    // The owner's own profile (hours, pickup address, minimum order, delivery
+    // area) and the audit trail. Staff who may manage access.
     Route::middleware(['auth:sanctum', 'admin', 'manage-users'])->group(function () {
-        Route::get('/admin/sellers', [\App\Http\Controllers\Api\AdminSellerController::class, 'index']);
-        // Before /{id}, or "applications" is swallowed as a seller id.
-        Route::get('/admin/sellers/applications', [\App\Http\Controllers\Api\AdminSellerController::class, 'applications']);
-        Route::get('/admin/sellers/{id}/review', [\App\Http\Controllers\Api\AdminSellerController::class, 'reviewDetail']);
-        Route::get('/admin/sellers/{id}/performance', [\App\Http\Controllers\Api\AdminSellerController::class, 'performance']);
-        Route::post('/admin/sellers/{id}/kyc/approve', [\App\Http\Controllers\Api\AdminSellerController::class, 'approveKyc']);
-        Route::post('/admin/sellers/{id}/kyc/reject', [\App\Http\Controllers\Api\AdminSellerController::class, 'rejectKyc']);
-        Route::get('/admin/sellers/{id}', [\App\Http\Controllers\Api\AdminSellerController::class, 'show']);
-        Route::post('/admin/sellers', [\App\Http\Controllers\Api\AdminSellerController::class, 'store']);
-        Route::put('/admin/sellers/{id}', [\App\Http\Controllers\Api\AdminSellerController::class, 'update']);
-        Route::post('/admin/sellers/{id}/payout-adjustment', [\App\Http\Controllers\Api\AdminSellerController::class, 'adjustPayout']);
-        // What each vendor is owed, what is payable now, and recording a transfer.
         Route::get('/admin/audit-logs', [\App\Http\Controllers\Api\AuditLogController::class, 'index']);
-        Route::get('/admin/payouts', [\App\Http\Controllers\Api\AdminPayoutController::class, 'index']);
-        Route::get('/admin/payout-requests', [\App\Http\Controllers\Api\AdminMoneyController::class, 'payoutRequests']);
-        Route::post('/admin/payout-requests/{id}/pay', [\App\Http\Controllers\Api\AdminMoneyController::class, 'pay']);
-        Route::post('/admin/payout-requests/{id}/reject', [\App\Http\Controllers\Api\AdminMoneyController::class, 'reject']);
-        Route::get('/admin/bank-changes', [\App\Http\Controllers\Api\AdminMoneyController::class, 'bankChanges']);
-        Route::post('/admin/sellers/{id}/bank-change/approve', [\App\Http\Controllers\Api\AdminMoneyController::class, 'approveBank']);
-        Route::post('/admin/sellers/{id}/bank-change/reject', [\App\Http\Controllers\Api\AdminMoneyController::class, 'rejectBank']);
-        Route::get('/admin/sellers/{id}/statements/{month}', [\App\Http\Controllers\Api\AdminMoneyController::class, 'statement']);
-        Route::get('/admin/sellers/{id}/statements/{month}/csv', [\App\Http\Controllers\Api\AdminMoneyController::class, 'statementCsv']);
-        Route::post('/admin/sellers/{id}/payouts', [\App\Http\Controllers\Api\AdminPayoutController::class, 'store']);
+        Route::get('/admin/store', [\App\Http\Controllers\Api\StoreController::class, 'show']);
+        Route::put('/admin/store', [\App\Http\Controllers\Api\StoreController::class, 'update']);
     });
 
     // ── Reels ────────────────────────────────────────────────────────────

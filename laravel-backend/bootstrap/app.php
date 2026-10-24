@@ -24,16 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'manage-users' => \App\Http\Middleware\EnsureUserCanManageUsers::class,
             'auth.optional' => \App\Http\Middleware\OptionalSanctumAuth::class,
-            // 'seller' = runs a merchant account in good standing. Separate
-            // from 'admin' on purpose: a seller manages their own shop, never
-            // the store.
-            'seller' => \App\Http\Middleware\EnsureUserIsSeller::class,
             // Entry to catalog writes for staff *or* an active seller. Per-row
             // ownership is still enforced in the controller.
             'can-manage-catalog' => \App\Http\Middleware\EnsureUserCanManageCatalog::class,
-            // 'seller.account' = has a merchant account, in any standing. Only
-            // the onboarding flow uses it; everything else wants 'seller'.
-            'seller.account' => \App\Http\Middleware\EnsureUserHasSellerAccount::class,
         ]);
 
         // This is a JSON-only API — there is no 'login' web route to redirect

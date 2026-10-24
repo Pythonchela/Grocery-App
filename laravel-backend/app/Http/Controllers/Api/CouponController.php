@@ -82,7 +82,7 @@ class CouponController extends Controller
 
     public function index()
     {
-        $coupons = Coupon::with('seller:id,display_name')->withCount('redemptions')->orderByDesc('created_at')->get();
+        $coupons = Coupon::withCount('redemptions')->orderByDesc('created_at')->get();
 
         return response()->json(['status' => 'success', 'count' => $coupons->count(), 'data' => $coupons]);
     }
@@ -131,63 +131,6 @@ class CouponController extends Controller
         $coupon->delete();
 
         return response()->json(['status' => 'success', 'message' => 'Coupon deleted']);
-    }
-
-    public function sellerIndex(Request $request)
-    {
-        $coupons = Coupon::withCount('redemptions')->where('seller_id', $request->user()->seller->id)
-            ->orderByDesc('created_at')->get();
-
-        return response()->json(['status' => 'success', 'count' => $coupons->count(), 'data' => $coupons]);
-    }
-
-    public function sellerStore(Request $request)
-    {
-        $request->merge(['code' => strtoupper(trim((string) $request->input('code')))]);
-        $data = $request->validate($this->sellerRules());
-        if ($data['type'] === 'PERCENT' && $data['value'] > 100) {
-            throw ValidationException::withMessages(['value' => ['Percentage cannot exceed 100.']]);
-        }
-        $data['seller_id'] = $request->user()->seller->id;
-        $data['target_type'] = 'ALL';
-
-        return response()->json(['status' => 'success', 'data' => Coupon::create($data)], 201);
-    }
-
-    public function sellerUpdate(Request $request, string $id)
-    {
-        $coupon = Coupon::where('seller_id', $request->user()->seller->id)->findOrFail($id);
-        if ($request->has('code')) {
-            $request->merge(['code' => strtoupper(trim((string) $request->input('code')))]);
-        }
-        $data = $request->validate($this->sellerRules($coupon->id));
-        if (($data['type'] ?? $coupon->type) === 'PERCENT' && ($data['value'] ?? $coupon->value) > 100) {
-            throw ValidationException::withMessages(['value' => ['Percentage cannot exceed 100.']]);
-        }
-        $coupon->update($data);
-
-        return response()->json(['status' => 'success', 'data' => $coupon->fresh()]);
-    }
-
-    public function sellerDestroy(Request $request, string $id)
-    {
-        $coupon = Coupon::where('seller_id', $request->user()->seller->id)->findOrFail($id);
-        if ($coupon->used_count > 0 || $coupon->redemptions()->exists()) {
-            $coupon->update(['is_active' => false]);
-            return response()->json(['status' => 'success', 'message' => 'Coupon deactivated; redemption history retained']);
-        }
-        $coupon->delete();
-
-        return response()->json(['status' => 'success', 'message' => 'Coupon deleted']);
-    }
-
-    private function sellerRules(?string $ignoreId = null): array
-    {
-        $rules = $this->rules($ignoreId);
-        unset($rules['target_type'], $rules['target_ids']);
-        $rules['value'] = [$ignoreId ? 'sometimes' : 'required', 'numeric', 'min:0.01', 'max:100000'];
-
-        return $rules;
     }
 
     private function rules(?string $ignoreId = null): array

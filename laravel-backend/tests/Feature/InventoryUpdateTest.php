@@ -55,21 +55,6 @@ class InventoryUpdateTest extends TestCase
         $this->assertSame($sku, $variant->fresh()->sku);
     }
 
-    public function test_a_seller_can_restock_their_own_products(): void
-    {
-        $seller = SellerFactory::new()->create();
-        $owner = User::factory()->create(['role' => 'SELLER', 'status' => 'ACTIVE']);
-        $seller->update(['user_id' => $owner->id]);
-        $product = Product::factory()->create(['seller_id' => $seller->id]);
-        $variant = $this->variantOf($product, 0);
-
-        $this->actingAs($owner->fresh(), 'sanctum')->putJson('/api/v1/inventory', [
-            'items' => [['variant_id' => $variant->id, 'stock' => 12]],
-        ])->assertOk();
-
-        $this->assertSame(12, (int) $variant->fresh()->stock);
-    }
-
     public function test_a_seller_cannot_touch_anyone_elses_stock_and_nothing_is_partially_applied(): void
     {
         $seller = SellerFactory::new()->create();

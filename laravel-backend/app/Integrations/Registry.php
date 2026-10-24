@@ -44,7 +44,6 @@ final class Registry
             self::storage(),
             self::couriers(),
             self::shipping(),
-            self::marketplace(),
         ];
     }
 
@@ -334,46 +333,4 @@ final class Registry
         );
     }
 
-    private static function marketplace(): Group
-    {
-        return new Group(
-            'marketplace',
-            'Marketplace',
-            'What kind of store this is, and the terms for new sellers.',
-            [
-                new Field('marketplace', 'mode', 'Store type', Field::SELECT, ['marketplace.mode'],
-                    ['string', 'in:single,hybrid,multi'],
-                    'Single: one business, no vendors. Hybrid: your shop sells next to vendors. Multi: vendors only, your own shop is hidden.',
-                    options: ['single', 'hybrid', 'multi'], env: 'MARKETPLACE_MODE'),
-                new Field('marketplace', 'home_layout', 'Home page', Field::SELECT, ['marketplace.home_layout'],
-                    ['string', 'in:auto,products,shops'],
-                    'Auto: a vendors-only store opens on its shops, any other shows a row of shops among the products. Products: the home lists products directly, with no shops on it. Shops: the home opens on the shops.',
-                    options: ['auto', 'products', 'shops'], env: 'MARKETPLACE_HOME_LAYOUT'),
-                new Field('marketplace', 'cart_rule', 'Basket rule', Field::SELECT, ['marketplace.cart_rule'],
-                    ['string', 'in:one_shop,mixed'],
-                    'One shop: a basket holds one shop at a time, like food and grocery apps. Mixed: a basket may hold several shops.',
-                    options: ['one_shop', 'mixed'], env: 'MARKETPLACE_CART_RULE'),
-                new Field('marketplace', 'default_commission_rate', 'Default commission (%)', Field::NUMBER, ['marketplace.default_commission_rate'],
-                    ['numeric', 'between:0,50'], 'Taken from a newly onboarded seller\'s sales. Existing sellers keep their own rate.',
-                    cast: 'float', env: 'MARKETPLACE_DEFAULT_COMMISSION'),
-                new Field('marketplace', 'accept_window_minutes', 'Order acceptance window (minutes)', Field::NUMBER, ['marketplace.accept_window_minutes'],
-                    ['integer', 'between:1,240'], 'How long a shop that confirms orders by hand has to answer before the order is cancelled and the customer refunded.',
-                    cast: 'int', env: 'MARKETPLACE_ACCEPT_WINDOW'),
-                new Field('marketplace', 'commission_gst_percent', 'GST on commission (%)', Field::NUMBER, ['marketplace.commission_gst_percent'],
-                    ['numeric', 'between:0,50'], 'Charged to the seller on top of the commission (18 is usual). 0 means none. Applies to new orders.',
-                    cast: 'float', env: 'MARKETPLACE_COMMISSION_GST'),
-                new Field('marketplace', 'tcs_percent', 'TCS (%)', Field::NUMBER, ['marketplace.tcs_percent'],
-                    ['numeric', 'between:0,20'], 'Tax collected at source from each seller\'s sales. 0 means none. Applies to new orders.',
-                    cast: 'float', env: 'MARKETPLACE_TCS'),
-                new Field('marketplace', 'tds_percent', 'TDS (%)', Field::NUMBER, ['marketplace.tds_percent'],
-                    ['numeric', 'between:0,20'], 'Tax deducted at source from each seller\'s sales. 0 means none. Applies to new orders.',
-                    cast: 'float', env: 'MARKETPLACE_TDS'),
-                new Field('marketplace', 'min_payout_amount', 'Smallest payout request (₹)', Field::NUMBER, ['marketplace.min_payout_amount'],
-                    ['numeric', 'between:0,100000'], 'A seller cannot ask to be paid less than this at once.',
-                    cast: 'float', env: 'MARKETPLACE_MIN_PAYOUT'),
-                new Field('marketplace', 'review_turnaround_days', 'Seller review turnaround (days)', Field::NUMBER, ['marketplace.review_turnaround_days'],
-                    ['integer', 'between:1,30'], 'Shown to applicants after they submit.', cast: 'int', env: 'MARKETPLACE_REVIEW_DAYS'),
-            ],
-        );
-    }
 }

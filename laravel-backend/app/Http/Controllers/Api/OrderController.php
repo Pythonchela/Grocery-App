@@ -158,12 +158,8 @@ class OrderController extends Controller
 
                 // Each line carries its share of the discount, so a partial
                 // return later refunds what was paid rather than the list price.
-                // It also carries who sold it and what the platform took.
-                $payouts = app(\App\Services\SellerPayoutService::class);
-
                 foreach ($cart->lines as $line) {
-                    $item = $order->items()->create($line->toOrderItem());
-                    $payouts->creditSale($item, $order);
+                    $order->items()->create($line->toOrderItem());
                 }
 
                 if ($cart->pointsRedeemable > 0) {
@@ -537,7 +533,6 @@ class OrderController extends Controller
             }
 
             $wasPaid = $locked->payment_status === 'PAID';
-            $payouts = app(\App\Services\SellerPayoutService::class);
 
             foreach ($order->items as $item) {
                 // A line the shop already turned down was undone, and refunded, when it was.
@@ -549,10 +544,6 @@ class OrderController extends Controller
                     ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
                 }
                 ProductOptions::restock($item, (int) $item->quantity);
-
-                // The sale is undone, so what it credited the seller is undone
-                // with it — otherwise a cancelled order still pays out.
-                $payouts->debitRefund($item, $order, (int) $item->quantity, $item->netPaidTotal());
             }
 
             // Loyalty has to unwind in both directions. Points the order earned

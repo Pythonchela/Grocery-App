@@ -229,7 +229,6 @@ class SellerOrderDesk
 
         ProductOptions::restock($item, (int) $item->quantity);
 
-        app(SellerPayoutService::class)->debitRefund($item, $order, (int) $item->quantity, $item->netPaidTotal());
     }
 
     private function alreadyRefunded(Order $order): float
