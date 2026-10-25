@@ -11,17 +11,13 @@ import 'package:google_sign_in/google_sign_in.dart';
 /// it the plugin returns an access token, `idToken` is null, and sign-in fails
 /// with nothing useful to show the user.
 class GoogleAuth {
-  /// The Web OAuth client id for "BazaarX server". A client id is public by
-  /// design (it ships inside every app and web page that uses it); only the
-  /// client *secret* is private, and the app never needs that. Defaulting it
-  /// here means every build shows "Continue with Google" instead of only builds
-  /// started with the flag. To point a build at another project:
+  /// This store's own Web OAuth client id (public by design: it ships inside the
+  /// app). There is no default: a build without one does not offer "Continue with
+  /// Google", rather than borrowing another business's Google project. Set it per
+  /// client (and create the Android client for the app's package in Google Cloud):
   ///
   ///     flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=…apps.googleusercontent.com
-  static const _serverClientId = String.fromEnvironment(
-    'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '570770760112-e60jda8rb40k4ct70982hulpoi03vt7i.apps.googleusercontent.com',
-  );
+  static const _serverClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
   /// Web builds identify the app by the client id in a meta tag rather than by
   /// package name, so the plugin needs it passed explicitly there too.

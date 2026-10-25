@@ -4,6 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../providers/StoreProvider';
 import { User, Mail, KeyRound, Smartphone, RefreshCw, ArrowRight, CheckCircle2 } from 'lucide-react';
 
+// This store's own Google client id (set NEXT_PUBLIC_GOOGLE_CLIENT_ID). Without one, "Continue with
+// Google" is not offered, except on a developer's machine where a demo sign-in stands in for it.
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const GOOGLE_AVAILABLE = Boolean(GOOGLE_CLIENT_ID) || process.env.NODE_ENV !== 'production';
+
 export default function AuthPrompt() {
   const { login, register, loginWithGoogle } = useStore();
   const [mode, setMode] = useState('login');
@@ -34,11 +39,7 @@ export default function AuthPrompt() {
     setError('');
 
     try {
-      // Check if Google Client ID is configured in client window
-      // A client id is public (it ships in every page that uses it), so it can
-      // default here; set NEXT_PUBLIC_GOOGLE_CLIENT_ID to use another project.
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-        || '570770760112-e60jda8rb40k4ct70982hulpoi03vt7i.apps.googleusercontent.com';
+      const clientId = GOOGLE_CLIENT_ID;
 
       if (window.google?.accounts?.id && clientId) {
         window.google.accounts.id.initialize({
@@ -104,6 +105,8 @@ export default function AuthPrompt() {
 
       <div className="bg-surface border border-line rounded-panel p-6 shadow-panel space-y-5">
         
+        {GOOGLE_AVAILABLE && (
+          <>
         {/* GOOGLE SIGN IN BUTTON */}
         <button
           type="button"
@@ -129,6 +132,8 @@ export default function AuthPrompt() {
           <span className="text-[11px] font-black text-ink-subtle uppercase tracking-widest">or email login</span>
           <div className="flex-1 h-px bg-line" />
         </div>
+          </>
+        )}
 
         {/* Tab Selector */}
         <div className="flex bg-surface-sunken rounded-card p-1">
