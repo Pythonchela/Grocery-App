@@ -40,7 +40,7 @@ class StorageTest extends TestCase
     private function s3Values(array $over = []): array
     {
         return array_merge([
-            'driver' => 's3', 'bucket' => 'shop-media', 'private_bucket' => 'shop-private',
+            'driver' => 's3', 'bucket' => 'shop-media',
             'public_url' => 'https://8.8.8.8', 'region' => 'ap-south-1',
             'access_key' => self::ACCESS_KEY, 'secret_key' => self::SECRET_KEY,
         ], $over);
@@ -106,26 +106,24 @@ class StorageTest extends TestCase
 
     // ── The connection test ─────────────────────────────────────────────
 
-    /** Point the tester's disk builder at two fake disks: public first, private second. */
+    /** Point the tester's disk builder at a fake disk. */
     private function fakeBuckets(): array
     {
         $public = Storage::fake('t_public');
-        $private = Storage::fake('t_private');
-        Storage::shouldReceive('build')->andReturn($public, $private);
+        Storage::shouldReceive('build')->andReturn($public);
 
-        return [$public, $private];
+        return [$public];
     }
 
-    public function test_a_healthy_pair_of_buckets_passes_and_leaves_nothing_behind(): void
+    public function test_a_healthy_bucket_passes_and_leaves_nothing_behind(): void
     {
-        [$public, $private] = $this->fakeBuckets();
+        [$public] = $this->fakeBuckets();
         Http::fake(fn ($r) => Http::response($public->get(ltrim((string) parse_url($r->url(), PHP_URL_PATH), '/'))));
 
         $result = (new StorageTester)->test($this->s3Values(), null);
 
         $this->assertSame('ok', $result->status, $result->message);
         $this->assertSame([], $public->allFiles());
-        $this->assertSame([], $private->allFiles());
     }
 
     public function test_a_bucket_that_is_not_publicly_readable_is_caught(): void
@@ -213,14 +211,6 @@ class StorageTest extends TestCase
 
         $this->assertSame('failed', $result->status);
         $this->assertStringNotContainsString('cURL', $result->message);
-    }
-
-    public function test_the_public_and_private_bucket_may_not_be_the_same(): void
-    {
-        $result = (new StorageTester)->test($this->s3Values(['private_bucket' => 'shop-media']), null);
-
-        $this->assertSame('failed', $result->status);
-        $this->assertStringContainsString('must be different', $result->message);
     }
 
     public function test_the_local_disk_has_nothing_to_test_and_missing_settings_are_reported(): void

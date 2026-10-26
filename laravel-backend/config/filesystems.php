@@ -48,13 +48,12 @@ return [
         ],
 
         /*
-        | The two disks the app writes user files to. Both are the server's own disk
+        | The disk the app writes uploaded files to. It is the server's own disk
         | until S3 is chosen (Admin -> Integrations -> Image & file storage, or
         | STORAGE_DRIVER=s3 here), so nothing changes for an existing install.
         |
-        |   media   - product images and other public uploads. Needs a bucket that
-        |             allows public reads.
-        |   private - seller KYC documents. Needs a DIFFERENT bucket that does not.
+        |   media - product images and other public uploads. Needs a bucket that
+        |           allows public reads.
         |
         | No `visibility` on the S3 form: buckets created since 2023 reject the
         | public-read ACL it would request. Public reads come from the bucket's policy
@@ -79,20 +78,6 @@ return [
             'use_path_style_endpoint' => filled(env('AWS_ENDPOINT')),
             'http' => ['connect_timeout' => 5, 'timeout' => 30],
             // Fail loudly: a silent `false` from a failed upload was once stored as a path.
-            'throw' => true,
-            'report' => false,
-        ],
-
-        'private' => [
-            'driver' => env('STORAGE_DRIVER', 'local'),
-            'root' => storage_path('app/private'),
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_PRIVATE_BUCKET'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => filled(env('AWS_ENDPOINT')),
-            'http' => ['connect_timeout' => 5, 'timeout' => 30],
             'throw' => true,
             'report' => false,
         ],

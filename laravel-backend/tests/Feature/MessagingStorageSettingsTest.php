@@ -60,7 +60,7 @@ class MessagingStorageSettingsTest extends TestCase
     private function s3(array $over = []): array
     {
         return array_merge([
-            'driver' => 's3', 'bucket' => 'shop-media', 'private_bucket' => 'shop-private',
+            'driver' => 's3', 'bucket' => 'shop-media',
             'public_url' => 'https://cdn.shop.in', 'region' => 'ap-south-1',
             'access_key' => self::ACCESS_KEY, 'secret_key' => self::SECRET_KEY,
         ], $over);
@@ -294,7 +294,6 @@ class MessagingStorageSettingsTest extends TestCase
         $this->assertSame('local', config('filesystems.disks.media.driver'));
         $this->assertSame('public', config('filesystems.disks.media.visibility'));
         $this->assertStringEndsWith('/storage', config('filesystems.disks.media.url'));
-        $this->assertSame('local', config('filesystems.disks.private.driver'));
     }
 
     public function test_choosing_s3_requires_everything_it_needs(): void
@@ -302,22 +301,20 @@ class MessagingStorageSettingsTest extends TestCase
         $this->save($this->admin(), 'storage', ['driver' => 's3'])
             ->assertStatus(422)
             ->assertJsonValidationErrors([
-                'values.bucket', 'values.private_bucket', 'values.public_url', 'values.region', 'values.access_key', 'values.secret_key',
+                'values.bucket', 'values.public_url', 'values.region', 'values.access_key', 'values.secret_key',
             ]);
 
         $this->assertSame(0, IntegrationSetting::count());
     }
 
-    public function test_s3_settings_reach_both_disks(): void
+    public function test_s3_settings_reach_the_disk(): void
     {
         $this->save($this->admin(), 'storage', $this->s3(['endpoint' => 'https://8.8.8.8']))->assertOk();
 
         $this->assertSame('s3', config('filesystems.disks.media.driver'));
-        $this->assertSame('s3', config('filesystems.disks.private.driver'));
         $this->assertSame('shop-media', config('filesystems.disks.media.bucket'));
-        $this->assertSame('shop-private', config('filesystems.disks.private.bucket'));
         $this->assertSame('https://cdn.shop.in', config('filesystems.disks.media.url'));
-        $this->assertSame(self::ACCESS_KEY, config('filesystems.disks.private.key'));
+        $this->assertSame(self::ACCESS_KEY, config('filesystems.disks.media.key'));
         $this->assertSame(self::SECRET_KEY, config('filesystems.disks.media.secret'));
         $this->assertSame('https://8.8.8.8', config('filesystems.disks.media.endpoint'));
     }
@@ -327,7 +324,6 @@ class MessagingStorageSettingsTest extends TestCase
         $this->save($this->admin(), 'storage', $this->s3())->assertOk();
 
         $this->assertNull(config('filesystems.disks.media.visibility'));
-        $this->assertNull(config('filesystems.disks.private.visibility'));
     }
 
     public function test_path_style_follows_an_endpoint_being_set(): void
@@ -361,15 +357,6 @@ class MessagingStorageSettingsTest extends TestCase
         $this->save($admin, 'storage', $this->s3())->assertOk();
 
         $this->assertNotSame($before, app('filesystem')->disk('media'));
-    }
-
-    public function test_the_public_and_private_bucket_must_differ(): void
-    {
-        $this->save($this->admin(), 'storage', $this->s3(['private_bucket' => 'shop-media']))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('values.private_bucket');
-
-        $this->assertSame(0, IntegrationSetting::count());
     }
 
     #[DataProvider('badEndpoints')]

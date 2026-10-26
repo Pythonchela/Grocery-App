@@ -11,12 +11,12 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Proves the buckets work before anything depends on them: writes a small file,
- * reads it back and removes it, in both buckets. For the public bucket it also
- * fetches the file over the Public URL - a bucket that accepts uploads but is not
- * publicly readable is the classic "images upload fine and then never show".
+ * Proves the bucket works before anything depends on it: writes a small file,
+ * reads it back and removes it, then fetches the file over the Public URL - a
+ * bucket that accepts uploads but is not publicly readable is the classic
+ * "images upload fine and then never show".
  *
- * The test disks are built here from the values in the form, so credentials that
+ * The test disk is built here from the values in the form, so credentials that
  * have not been saved are tried without touching the live configuration.
  */
 class StorageTester implements Tester
@@ -27,14 +27,10 @@ class StorageTester implements Tester
             return TestResult::unavailable('Files are kept on the server disk. Choose S3 to use a bucket.');
         }
 
-        foreach (['bucket', 'private_bucket', 'public_url', 'region', 'access_key', 'secret_key'] as $needed) {
+        foreach (['bucket', 'public_url', 'region', 'access_key', 'secret_key'] as $needed) {
             if (blank($values[$needed] ?? null)) {
                 return TestResult::incomplete('Fill in every storage setting (the endpoint may stay empty for Amazon S3) to test.');
             }
-        }
-
-        if (($values['bucket'] ?? null) === ($values['private_bucket'] ?? null)) {
-            return TestResult::failed('The public and private buckets must be different. Seller documents must never share a bucket that allows public reads.');
         }
 
         $endpoint = (string) ($values['endpoint'] ?? '');
@@ -48,10 +44,6 @@ class StorageTester implements Tester
 
         try {
             $public = $this->disk($values, (string) $values['bucket']);
-            $private = $this->disk($values, (string) $values['private_bucket']);
-
-            $this->roundTrip($private, $probe, $body, null);
-
             $publicUrl = rtrim((string) $values['public_url'], '/').'/'.$probe;
             $readable = $this->roundTrip($public, $probe, $body, $publicUrl);
         } catch (S3Exception $e) {
@@ -64,7 +56,7 @@ class StorageTester implements Tester
             return TestResult::failed($readable);
         }
 
-        return TestResult::ok('Both buckets accept uploads, and files in the public bucket are readable at the Public URL.');
+        return TestResult::ok('The bucket accepts uploads, and files are readable at the Public URL.');
     }
 
     /** @param  array<string, mixed>  $values */
@@ -125,7 +117,7 @@ class StorageTester implements Tester
         return match ($e->getAwsErrorCode()) {
             'InvalidAccessKeyId' => 'The access key ID is not recognised.',
             'SignatureDoesNotMatch' => 'The secret access key is wrong (or the region is).',
-            'NoSuchBucket' => 'One of the buckets does not exist. Check the names.',
+            'NoSuchBucket' => 'The bucket does not exist. Check the name.',
             'AccessDenied', 'AllAccessDisabled' => 'The key is valid but is not allowed to write to the bucket. Give it read, write and delete access.',
             'AuthorizationHeaderMalformed', 'PermanentRedirect' => 'The region does not match the bucket.',
             default => 'The storage service refused the request'.($e->getAwsErrorCode() ? " ({$e->getAwsErrorCode()})." : '.'),

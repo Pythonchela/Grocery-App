@@ -122,7 +122,7 @@ final class Registry
         return new Group(
             'google',
             'Google sign-in',
-            'Lets shoppers sign in with their Google account. In Google Cloud (APIs & Services, Credentials) create a Web application client and an Android client for the app\'s package name and signing key, then paste the IDs here. They are public identifiers, not secrets, and the website and app pick them up within a minute with no rebuild.',
+            'Lets shoppers sign in with their Google account. Client IDs are public identifiers, not secrets, and the website and app pick them up within a minute with no rebuild.',
             [
                 new Field('google', 'client_id', 'Web client ID', Field::TEXT, ['services.google.client_id'], $clientId,
                     'The Web application client. The website and the app both use it.', '1234-abc.apps.googleusercontent.com', env: 'GOOGLE_CLIENT_ID'),
@@ -227,37 +227,32 @@ final class Registry
         return new Group(
             'storage',
             'Image & file storage',
-            'Where uploaded product images and seller documents are kept. On the server disk they are lost if you ever move servers; in a bucket they are not. Works with Amazon S3 and any S3-compatible service (Cloudflare R2, Backblaze B2, DigitalOcean Spaces...).',
+            'Where uploaded product images and other files are kept. On the server disk they are lost if you ever move servers; in a bucket they are not. Works with Amazon S3 and any S3-compatible service (Cloudflare R2, Backblaze B2, DigitalOcean Spaces...).',
             [
                 new Field('storage', 'driver', 'Storage', Field::SELECT,
-                    ['filesystems.disks.media.driver', 'filesystems.disks.private.driver'],
+                    ['filesystems.disks.media.driver'],
                     ['string', 'in:local,s3'], 'Switching only affects NEW uploads. Use the media:migrate command to move existing files.',
                     options: ['local', 's3'], env: 'STORAGE_DRIVER'),
                 new Field('storage', 'bucket', 'Public bucket', Field::TEXT, ['filesystems.disks.media.bucket'],
-                    $bucket, 'Holds product images. It must allow public reads (through a public bucket policy, r2.dev or a CDN).', env: 'AWS_BUCKET'),
-                new Field('storage', 'private_bucket', 'Private bucket', Field::TEXT, ['filesystems.disks.private.bucket'],
-                    $bucket, 'Holds seller KYC documents. A DIFFERENT bucket from the public one, and it must NOT allow public reads.', env: 'AWS_PRIVATE_BUCKET'),
+                    $bucket, 'Holds product images and other uploads. It must allow public reads (through a public bucket policy, r2.dev or a CDN).', env: 'AWS_BUCKET'),
                 new Field('storage', 'public_url', 'Public URL', Field::TEXT, ['filesystems.disks.media.public_url'],
                     ['url:https', 'max:200'], 'The address images are served from, e.g. https://cdn.yourshop.in', env: 'AWS_URL'),
                 new Field('storage', 'region', 'Region', Field::TEXT,
-                    ['filesystems.disks.media.region', 'filesystems.disks.private.region'],
+                    ['filesystems.disks.media.region'],
                     ['string', 'max:40', 'regex:/^[a-z0-9\-]+$/'], 'e.g. ap-south-1. Use auto for Cloudflare R2.', 'ap-south-1', env: 'AWS_DEFAULT_REGION'),
                 new Field('storage', 'endpoint', 'Endpoint', Field::TEXT,
-                    ['filesystems.disks.media.endpoint', 'filesystems.disks.private.endpoint'],
+                    ['filesystems.disks.media.endpoint'],
                     ['url:https', 'max:200', self::publicHost(true)], 'Leave empty for Amazon S3. For R2: https://<account-id>.r2.cloudflarestorage.com', env: 'AWS_ENDPOINT'),
                 new Field('storage', 'access_key', 'Access key ID', Field::SECRET,
-                    ['filesystems.disks.media.key', 'filesystems.disks.private.key'],
+                    ['filesystems.disks.media.key'],
                     ['string', 'min:8', 'max:200', 'regex:/^\S+$/'], env: 'AWS_ACCESS_KEY_ID'),
                 new Field('storage', 'secret_key', 'Secret access key', Field::SECRET,
-                    ['filesystems.disks.media.secret', 'filesystems.disks.private.secret'],
+                    ['filesystems.disks.media.secret'],
                     ['string', 'min:16', 'max:200', 'regex:/^\S+$/'], env: 'AWS_SECRET_ACCESS_KEY'),
             ],
             together: [['access_key', 'secret_key']],
             tester: StorageTester::class,
-            requiredWhen: ['driver' => ['s3' => ['bucket', 'private_bucket', 'public_url', 'region', 'access_key', 'secret_key']]],
-            // Seller identity documents in a bucket that allows public reads would be a
-            // breach waiting for a guessable URL.
-            distinct: [['bucket', 'private_bucket']],
+            requiredWhen: ['driver' => ['s3' => ['bucket', 'public_url', 'region', 'access_key', 'secret_key']]],
         );
     }
 
@@ -323,7 +318,7 @@ final class Registry
                 new Field('shipping', 'pickup_lng', 'Longitude', Field::NUMBER, ['delivery.pickup_address.lng'],
                     ['numeric', 'between:-180,180'], cast: 'float', env: 'DELIVERY_PICKUP_LNG'),
                 new Field('shipping', 'auto_book', 'Book couriers automatically', Field::SELECT, ['delivery.auto_book'],
-                    ['string', 'in:on,off'], 'On: marking an order shipped books the courier for the seller, and the carrier charges for it. Off: sellers type the courier and tracking number themselves.',
+                    ['string', 'in:on,off'], 'On: marking an order shipped books the courier, and the carrier charges for it. Off: you type the courier and tracking number yourself.',
                     options: ['on', 'off'], env: 'DELIVERY_AUTO_BOOK'),
                 new Field('shipping', 'free_above', 'Free shipping above (₹)', Field::NUMBER, ['delivery.free_above'],
                     ['integer', 'between:0,1000000'], 'Applied after discounts.', cast: 'int', env: 'DELIVERY_FREE_ABOVE'),

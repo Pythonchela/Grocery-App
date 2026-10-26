@@ -9,10 +9,9 @@ plugins {
 }
 
 // Push notifications. The Firebase plugin is applied only when a config file
-// exists, so the apps build and run without a Firebase project and push switches
-// on the moment google-services.json is dropped in. Each app has its own Firebase
-// app (its own package name): src/shop/google-services.json and
-// src/vendor/google-services.json. One at android/app/ is still honoured.
+// exists, so the app builds and runs without a Firebase project and push switches
+// on the moment google-services.json is dropped in at android/app/. It must be the
+// file for this app's package name.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }

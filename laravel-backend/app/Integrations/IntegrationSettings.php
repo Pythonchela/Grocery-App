@@ -141,7 +141,7 @@ class IntegrationSettings
      */
     private function derive(): void
     {
-        foreach (['media' => 'public', 'private' => null] as $disk => $localVisibility) {
+        foreach (['media' => 'public'] as $disk => $localVisibility) {
             $s3 = config("filesystems.disks.{$disk}.driver") === 's3';
 
             config([
@@ -196,7 +196,7 @@ class IntegrationSettings
         // would keep the old credentials just as the services above would.
         app()->forgetInstance('mail.manager');
         Mail::clearResolvedInstance('mail.manager');
-        app('filesystem')->forgetDisk(['media', 'private']);
+        app('filesystem')->forgetDisk(['media']);
     }
 
     // ── What the admin screen shows ─────────────────────────────────────
@@ -241,12 +241,13 @@ class IntegrationSettings
 
         return match ($group->id) {
             'gemini' => $set('api_key') ? 'configured' : 'missing',
+            'push' => $set('service_account') ? 'configured' : 'missing',
             'google' => count(array_filter(['client_id', 'web_client_id', 'android_client_id', 'ios_client_id'], $set)) > 0 ? 'configured' : 'missing',
             'couriers' => $this->courierStatus($set),
             'email' => $this->emailStatus($group),
             'sms' => $this->smsStatus($group, $set),
             'storage' => $this->storageStatus($group, $set),
-            default => 'configured', // shipping and marketplace always have defaults
+            default => 'configured', // shipping always has defaults
         };
     }
 
@@ -278,7 +279,7 @@ class IntegrationSettings
             return 'local';
         }
 
-        return $set('bucket') && $set('private_bucket') && $set('access_key') && $set('secret_key') ? 'configured' : 'partial';
+        return $set('bucket') && $set('public_url') && $set('access_key') && $set('secret_key') ? 'configured' : 'partial';
     }
 
     private function courierStatus(callable $set): string

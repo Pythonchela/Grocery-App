@@ -107,6 +107,19 @@ class SettingsExposureTest extends TestCase
         $this->assertStringNotContainsString(self::GEMINI_KEY, $body);
     }
 
+    public function test_the_checklist_does_not_call_an_empty_integration_configured(): void
+    {
+        config(['services.fcm.service_account' => null, 'services.gemini.key' => null]);
+
+        $groups = collect($this->actingAs($this->owner(), 'sanctum')->getJson('/api/v1/admin/integrations')->assertOk()->json('data.groups'))
+            ->pluck('status', 'id');
+
+        $this->assertSame('missing', $groups['push']);
+        $this->assertSame('missing', $groups['gemini']);
+        $this->assertSame('missing', $groups['sms']);
+        $this->assertSame('local', $groups['storage']);
+    }
+
     private function assertNoSecrets(string $body, string $where): void
     {
         foreach ([self::GEMINI_KEY, self::SHIPROCKET_PASSWORD, 'SENTINEL'] as $secret) {

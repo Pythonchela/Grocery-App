@@ -56,7 +56,7 @@ const NAV_ITEMS = [
   { id: 'store', label: 'My shop', icon: Store, href: '/admin/store', adminOnly: true },
   { id: 'users', label: 'Users & staff', icon: Users, href: '/admin/users', adminOnly: true },
   // Holds API keys, so it is full-admin only like the rest of this block.
-  { id: 'integrations', label: 'Integrations & API keys', icon: KeyRound, href: '/admin/integrations', adminOnly: true },
+  { id: 'integrations', label: 'Settings & API keys', icon: KeyRound, href: '/admin/integrations', adminOnly: true },
   { id: 'audit', label: 'Audit log', icon: ScrollText, adminOnly: true },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
