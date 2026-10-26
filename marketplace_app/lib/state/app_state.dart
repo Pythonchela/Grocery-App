@@ -9,6 +9,7 @@ import '../data/bundles.dart';
 import '../data/order_alerts.dart';
 import '../data/models.dart';
 import '../data/product_options.dart';
+import '../data/google_auth.dart';
 import '../data/store_config.dart';
 import '../design/brand.g.dart';
 import '../design/theme_overrides.dart';
@@ -63,6 +64,7 @@ class AppState extends ChangeNotifier {
       final data = await ApiClient.request('/config');
       if (data is! Map<String, dynamic>) return;
       _storeConfig = StoreConfig.fromJson(data);
+      GoogleAuth.configure(_storeConfig.googleServerClientId);
       await _prefs?.setString(DsBrand.storageKey(_storeConfigKey), jsonEncode(data));
       notifyListeners();
     } catch (_) {
@@ -74,6 +76,7 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   void useStoreConfig(StoreConfig config) {
     _storeConfig = config;
+    GoogleAuth.configure(config.googleServerClientId);
     notifyListeners();
   }
 
@@ -82,6 +85,7 @@ class AppState extends ChangeNotifier {
     if (raw == null) return;
     try {
       _storeConfig = StoreConfig.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      GoogleAuth.configure(_storeConfig.googleServerClientId);
     } catch (_) {
       _storeConfig = StoreConfig.fallback;
     }

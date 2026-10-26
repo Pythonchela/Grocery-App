@@ -11,26 +11,45 @@ import 'package:google_sign_in/google_sign_in.dart';
 /// it the plugin returns an access token, `idToken` is null, and sign-in fails
 /// with nothing useful to show the user.
 class GoogleAuth {
-  /// This store's own Web OAuth client id (public by design: it ships inside the
-  /// app). There is no default: a build without one does not offer "Continue with
-  /// Google", rather than borrowing another business's Google project. Set it per
-  /// client (and create the Android client for the app's package in Google Cloud):
+  /// The Web OAuth client id, from the store (the owner sets it in Settings, so no
+  /// rebuild is needed), or from the build for local work:
   ///
   ///     flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=…apps.googleusercontent.com
-  static const _serverClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+  ///
+  /// There is no default: a store without its own Google setup does not offer
+  /// "Continue with Google" rather than borrowing another business's project.
+  static const _buildClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
   /// Web builds identify the app by the client id in a meta tag rather than by
   /// package name, so the plugin needs it passed explicitly there too.
   static const _webClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
+  static String _storeClientId = '';
+  static GoogleSignIn? _client;
+  static String? _clientFor;
+
+  /// Called with what the store's config says. Safe to call again when it changes.
+  static void configure(String serverClientId) {
+    _storeClientId = serverClientId.trim();
+  }
+
+  static String get _serverClientId => _storeClientId.isNotEmpty ? _storeClientId : _buildClientId;
+
   static bool get isConfigured =>
       kIsWeb ? _webClientId.isNotEmpty : _serverClientId.isNotEmpty;
 
-  static final GoogleSignIn _google = GoogleSignIn(
-    scopes: const ['email', 'profile'],
-    serverClientId: !kIsWeb && _serverClientId.isNotEmpty ? _serverClientId : null,
-    clientId: kIsWeb && _webClientId.isNotEmpty ? _webClientId : null,
-  );
+  /// Built on first use and again if the id changed, so a new id applies without a restart.
+  static GoogleSignIn get _google {
+    if (_client == null || _clientFor != _serverClientId) {
+      _clientFor = _serverClientId;
+      _client = GoogleSignIn(
+        scopes: const ['email', 'profile'],
+        serverClientId: !kIsWeb && _serverClientId.isNotEmpty ? _serverClientId : null,
+        clientId: kIsWeb && _webClientId.isNotEmpty ? _webClientId : null,
+      );
+    }
+    return _client!;
+  }
 
   /// Returns the ID token, or null when the user backs out of the sheet.
   ///
@@ -39,9 +58,9 @@ class GoogleAuth {
   static Future<String?> signIn() async {
     if (!isConfigured) {
       throw StateError(
-        'Google sign-in is not configured in this build. Pass '
-        '--dart-define=GOOGLE_SERVER_CLIENT_ID=<web client id> (and '
-        'GOOGLE_WEB_CLIENT_ID for web builds).',
+        'Google sign-in is not set up for this store yet. Set '
+        'the Google client id in the admin Settings (or '
+        '--dart-define=GOOGLE_SERVER_CLIENT_ID=<web client id>).',
       );
     }
 

@@ -39,6 +39,20 @@ final class StoreMode
         return false;
     }
 
+    /** The first of these settings that holds a client id, or null. */
+    private static function clientId(string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = config($key);
+
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
+
     /** What the apps need to know, as the public config endpoint returns it. */
     public static function publicConfig(): array
     {
@@ -51,6 +65,11 @@ final class StoreMode
             'home_shows_shops' => false,
             'one_shop_per_cart' => false,
             'store_name' => (string) config('app.name'),
+            // Google client ids are public identifiers (they ship in every page and app that
+            // uses them); the admin sets them in Settings so no rebuild is needed. Nothing
+            // secret is ever put in this response.
+            'google_web_client_id' => self::clientId('services.google.web_client_id', 'services.google.client_id'),
+            'google_server_client_id' => self::clientId('services.google.client_id'),
         ];
     }
 }

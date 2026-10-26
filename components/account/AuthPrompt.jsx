@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../providers/StoreProvider';
 import { User, Mail, KeyRound, Smartphone, RefreshCw, ArrowRight, CheckCircle2 } from 'lucide-react';
 
-// This store's own Google client id (set NEXT_PUBLIC_GOOGLE_CLIENT_ID). Without one, "Continue with
-// Google" is not offered, except on a developer's machine where a demo sign-in stands in for it.
+// Build-time fallback only; the owner normally sets the id in Settings (see the store config).
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-const GOOGLE_AVAILABLE = Boolean(GOOGLE_CLIENT_ID) || process.env.NODE_ENV !== 'production';
 
 export default function AuthPrompt() {
-  const { login, register, loginWithGoogle } = useStore();
+  const { login, register, loginWithGoogle, storeConfig } = useStore();
+  // The owner sets the Google client id in Settings; the build-time variable is only a fallback.
+  const googleClientId = storeConfig?.google_web_client_id || GOOGLE_CLIENT_ID;
+  const googleAvailable = Boolean(googleClientId) || process.env.NODE_ENV !== 'production';
   const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export default function AuthPrompt() {
     setError('');
 
     try {
-      const clientId = GOOGLE_CLIENT_ID;
+      const clientId = googleClientId;
 
       if (window.google?.accounts?.id && clientId) {
         window.google.accounts.id.initialize({
@@ -105,7 +106,7 @@ export default function AuthPrompt() {
 
       <div className="bg-surface border border-line rounded-panel p-6 shadow-panel space-y-5">
         
-        {GOOGLE_AVAILABLE && (
+        {googleAvailable && (
           <>
         {/* GOOGLE SIGN IN BUTTON */}
         <button

@@ -122,14 +122,14 @@ final class Registry
         return new Group(
             'google',
             'Google sign-in',
-            'OAuth client IDs that may sign shoppers in. Client IDs are public identifiers, not secrets.',
+            'Lets shoppers sign in with their Google account. In Google Cloud (APIs & Services, Credentials) create a Web application client and an Android client for the app\'s package name and signing key, then paste the IDs here. They are public identifiers, not secrets, and the website and app pick them up within a minute with no rebuild.',
             [
                 new Field('google', 'client_id', 'Web client ID', Field::TEXT, ['services.google.client_id'], $clientId,
-                    'The Web application client from Google Cloud.', '1234-abc.apps.googleusercontent.com', env: 'GOOGLE_CLIENT_ID'),
+                    'The Web application client. The website and the app both use it.', '1234-abc.apps.googleusercontent.com', env: 'GOOGLE_CLIENT_ID'),
                 new Field('google', 'web_client_id', 'Web client ID (storefront)', Field::TEXT, ['services.google.web_client_id'], $clientId,
                     'Only if the storefront uses a different web client.', '', env: 'GOOGLE_WEB_CLIENT_ID'),
                 new Field('google', 'android_client_id', 'Android client ID', Field::TEXT, ['services.google.android_client_id'], $clientId,
-                    'Tied to the app\'s signing certificate.', '', env: 'GOOGLE_ANDROID_CLIENT_ID'),
+                    'The Android client for the app\'s package name and the SHA-1 of the key that signs it. Create one for the debug key and one for the release key.', '', env: 'GOOGLE_ANDROID_CLIENT_ID'),
                 new Field('google', 'ios_client_id', 'iOS client ID', Field::TEXT, ['services.google.ios_client_id'], $clientId,
                     'Tied to the app\'s bundle ID.', '', env: 'GOOGLE_IOS_CLIENT_ID'),
             ],
