@@ -149,11 +149,13 @@ class MigrateMedia extends Command
     {
         $grammar = DB::connection()->getQueryGrammar();
         $wrapped = $grammar->wrap($column);
+        // MySQL and MariaDB cast to CHAR; TEXT is not a cast target there.
+        $textType = in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true) ? 'CHAR' : 'TEXT';
         $count = 0;
 
-        $query = DB::table($table)->select(['id', $column])->where(function ($q) use ($wrapped, $pairs) {
+        $query = DB::table($table)->select(['id', $column])->where(function ($q) use ($wrapped, $textType, $pairs) {
             foreach ($pairs as [$search]) {
-                $q->orWhereRaw("CAST({$wrapped} AS TEXT) LIKE ?", ['%'.$search.'%']);
+                $q->orWhereRaw("CAST({$wrapped} AS {$textType}) LIKE ?", ['%'.$search.'%']);
             }
         });
 

@@ -112,7 +112,8 @@ function LayoutInner({ children }) {
               <ul className="space-y-2.5 text-xs font-semibold text-ink-muted">
                 {[
                   {label:'About Us', href:'#'},
-                  {label:'Privacy Policy', href:'#'},
+                  {label:'Privacy Policy', href:'/privacy'},
+                  {label:'Delete Account', href:'/delete-account'},
                   {label:'Terms of Service', href:'#'},
                   {label:'BIS IS 19000 Compliance', href:'#'},
                 ].map(l=>(

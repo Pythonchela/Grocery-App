@@ -125,3 +125,28 @@ then nothing is shared and there is nothing to break.
 - An empty GitHub repository for the single-store project (it has no remote yet).
 - You run the commands on the server (as before); the exact commands for each phase are prepared in
   advance, one step at a time.
+
+## Local rehearsal (done 2026-10-28, nothing pushed, nothing deployed)
+
+A fresh copy of the single-store backend was run on a new local MySQL database (`single_store_local`),
+completely separate from the marketplace.
+
+- All 52 migrations ran cleanly; one house store row, no vendor tables.
+- The whole backend test suite passes on MySQL as well as sqlite (601 tests, 11 skipped on both).
+  Running on a second engine found and fixed three things sqlite hid: `media:migrate` used a SQL cast
+  MySQL rejects (it is the command the plan relies on to move images to a bucket), the integration audit
+  list could show two changes made in the same second in the wrong order, and one test assumed sqlite's JSON text.
+- The website, against that backend, loads the storefront, the privacy page and the delete-account page.
+- The Android debug app, against that backend with **no Google ID in the build**, loads home, categories and
+  images, and shows "Continue with Google": the ID was saved in the new backend's Settings and the app
+  picked it up from the server. This is the behaviour the switch depends on.
+- A fresh store's starter products are "Sold out" until the owner enters stock.
+
+Not rehearsed (needs real accounts or a real server): live Razorpay and courier webhooks, push delivery,
+a sign-in with a real Google account, the Play-signed build, and a data move from the marketplace.
+
+To run it again: start Laragon's MySQL, then from `laravel-backend` run
+`php artisan serve --port=8002` with `DB_CONNECTION=mysql DB_DATABASE=single_store_local DB_USERNAME=root`
+set; start the website with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8002/api/v1 npm run dev`; run the app with
+`adb reverse tcp:8002 tcp:8002` and `--dart-define=API_BASE=http://127.0.0.1:8002/api/v1`.
+

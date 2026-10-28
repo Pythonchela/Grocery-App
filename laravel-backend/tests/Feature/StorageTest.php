@@ -295,7 +295,10 @@ class StorageTest extends TestCase
         $product = Product::factory()->create(['images' => ['http://localhost/storage/uploads/a.jpg']]);
 
         // The raw stored text has its slashes escaped, exactly as a json column keeps them.
-        $this->assertStringContainsString('http:\\/\\/localhost', (string) DB::table('products')->where('id', $product->id)->value('images'));
+        // (MySQL's json type normalises them away, and the rewrite then simply matches the plain form.)
+        if (! in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            $this->assertStringContainsString('http:\\/\\/localhost', (string) DB::table('products')->where('id', $product->id)->value('images'));
+        }
 
         $this->artisan('media:migrate', ['--apply' => true])->assertSuccessful();
 

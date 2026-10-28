@@ -65,6 +65,8 @@ class IntegrationController extends Controller
         $rows = IntegrationAuditLog::query()
             ->with('user:id,name,email')
             ->orderByDesc('created_at')
+            // Ids are time-ordered, so this puts two changes made in the same second newest first.
+            ->orderByDesc('id')
             ->limit(100)
             ->get()
             ->map(fn (IntegrationAuditLog $l) => [
