@@ -124,7 +124,7 @@ broken in the meantime.
    **three** client ids:
    - **Web** — this is the one the server verifies against, and the one Android
      must request an ID token *for*.
-   - **Android** — keyed to your package name (`in.bazaarx.marketplace_app`)
+   - **Android** — keyed to your package name (`in.bazaarx.shop`)
      and the SHA-1 of the signing certificate. Debug and release certificates
      have different SHA-1s, so register both or Google sign-in works in debug
      and fails in production.

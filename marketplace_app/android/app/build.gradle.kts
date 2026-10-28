@@ -45,7 +45,7 @@ android {
 
     defaultConfig {
         // Change this per client: it identifies the app on the phone and in the Play Store.
-        applicationId = "in.bazaarx.store"
+        applicationId = "in.bazaarx.shop"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
