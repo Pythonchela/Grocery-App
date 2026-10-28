@@ -90,6 +90,26 @@ today.
 - Rollback is a build with the old addresses, or pausing the Play rollout.
 - Afterwards: backups, error tracking (Sentry DSN), and retire the old webhook addresses.
 
+## The multi-vendor marketplace is read-only throughout
+
+Nothing in this process edits the marketplace: its code (`E:\Marketplace App`), its phone app, its server,
+its database, its domain, its `.env`, its Settings values or its signing key. All of the work happens in
+`E:\Marketplace Single Vendor` and on the new server.
+
+The only place the two can touch is an account they both use. There the rule is **add a new entry, never
+change or remove an existing one**:
+
+| Shared account | Do this | Never do this |
+|---|---|---|
+| Google Cloud project | Add the new website address as an extra Authorized JavaScript origin; add Android clients for `in.bazaarx.store` | Edit or delete an existing client, origin or the consent screen |
+| Firebase | Register `in.bazaarx.store` as its own Android app; make a new service-account key | Delete or rotate the marketplace's key or app |
+| Razorpay | Add a second webhook for the new address with its own secret | Edit or delete the marketplace's webhook; change the existing keys |
+| Shiprocket | Create a separate API user for the single store (up to four are allowed) | Reuse the marketplace's API user, or replace its webhook address |
+| SMS, email, Gemini, storage | Use a separate key, sender or bucket where the provider allows it | Share one bucket or rotate a key the marketplace uses |
+
+Better still, give the single store its own Razorpay and Shiprocket accounts if it will be a separate business:
+then nothing is shared and there is nothing to break.
+
 ## Rules that keep it from breaking anything
 
 - Only add; never edit the live marketplace, its database or its keys.
