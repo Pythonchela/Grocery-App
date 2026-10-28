@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> _trending = [];
   List<Product> _featured = [];
   List<Product> _forYou = [];
-  List<HomeSection> _sections = [];
+  HomeLayout _layout = HomeLayout.plan(const []);
   bool _hasReels = false;
   bool _loading = true;
   String? _error;
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
           (results[0] as List).map((c) => Category.fromJson(c)).toList(),
           [..._featured, ..._trending],
         );
-        _sections = HomeSection.parseList(results[3]);
+        _layout = HomeLayout.plan(HomeSection.parseList(results[3]));
         final reelsMeta = (results[4] as Map)['meta'];
         _hasReels = reelsMeta is Map && ((reelsMeta['total'] as num?) ?? 0) > 0;
         _loading = false;
@@ -222,9 +222,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              if (_sections.isNotEmpty && !_loading)
-                ..._sectionSlivers()
-              else ...[
+              if (!_layout.isEmpty && !_loading) ...[
+                ..._sectionSlivers(),
+                if (_layout.needsCatalogue)
+                  ..._catalogueSlivers(withReels: !_layout.hasReelsSection)
+                else
+                  const SliverToBoxAdapter(
+                      child: SizedBox(height: DsSpace.s10)),
+              ] else ...[
                 SliverToBoxAdapter(
                     child: _Hero(
                         imageUrl:
@@ -233,54 +238,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             _categories.isEmpty ? null : _openCategoryList)),
                 if (_loading)
                   const SliverToBoxAdapter(child: _HomeSkeleton())
-                else ...[
-                  const SliverToBoxAdapter(
-                      child: SizedBox(height: DsSpace.s4)),
-                  SliverToBoxAdapter(
-                      child: CategoryShortcuts(
-                          scrollable: true,
-                          categories: _categories,
-                          onSelected: (category) => Navigator.of(context)
-                              .push(MaterialPageRoute(
-                                  builder: (_) => CategoryScreen(
-                                      category: category,
-                                      siblings: _categories))))),
-                  if (_trending.isNotEmpty) ...[
-                    const _SectionHeader(
-                      title: 'Trending now',
-                    ),
-                    SliverToBoxAdapter(
-                      child: ProductRail(
-                          products: _trending, onTap: _openProduct),
-                    ),
-                  ],
-                  if (_hasReels)
-                    SliverToBoxAdapter(
-                      child: ReelsPromo(
-                        section: const HomeSection(
-                            id: 'reels', type: HomeSectionType.reels),
-                        onOpen: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                              builder: (_) => const ReelsScreen()),
-                        ),
-                      ),
-                    ),
-                  if (_forYou.isNotEmpty) ...[
-                    const _SectionHeader(
-                      title: 'Recommended for you',
-                    ),
-                    SliverToBoxAdapter(
-                      child:
-                          ProductRail(products: _forYou, onTap: _openProduct),
-                    ),
-                  ],
-                  _AllItems(
-                    products: _featured,
-                    onOpen: _openProduct,
-                  ),
-                  const SliverToBoxAdapter(
-                      child: SizedBox(height: DsSpace.s10)),
-                ],
+                else
+                  ..._catalogueSlivers(withReels: true),
               ],
             ],
           ),
@@ -289,11 +248,58 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// The app's own categories and product lists: the whole home page when the
+  /// admin has no layout, and what follows a layout that shows no products.
+  List<Widget> _catalogueSlivers({required bool withReels}) {
+    return [
+      const SliverToBoxAdapter(child: SizedBox(height: DsSpace.s4)),
+      SliverToBoxAdapter(
+          child: CategoryShortcuts(
+              scrollable: true,
+              categories: _categories,
+              onSelected: (category) => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => CategoryScreen(
+                          category: category, siblings: _categories))))),
+      if (_trending.isNotEmpty) ...[
+        const _SectionHeader(
+          title: 'Trending now',
+        ),
+        SliverToBoxAdapter(
+          child: ProductRail(products: _trending, onTap: _openProduct),
+        ),
+      ],
+      if (withReels && _hasReels)
+        SliverToBoxAdapter(
+          child: ReelsPromo(
+            section:
+                const HomeSection(id: 'reels', type: HomeSectionType.reels),
+            onOpen: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ReelsScreen()),
+            ),
+          ),
+        ),
+      if (_forYou.isNotEmpty) ...[
+        const _SectionHeader(
+          title: 'Recommended for you',
+        ),
+        SliverToBoxAdapter(
+          child: ProductRail(products: _forYou, onTap: _openProduct),
+        ),
+      ],
+      _AllItems(
+        products: _featured,
+        onOpen: _openProduct,
+      ),
+      const SliverToBoxAdapter(child: SizedBox(height: DsSpace.s10)),
+    ];
+  }
+
   /// The home page as the admin laid it out, section by section.
   List<Widget> _sectionSlivers() {
     final slivers = <Widget>[];
 
-    for (final section in _sections) {
+    for (final section in _layout.sections) {
       final Widget? body = switch (section.type) {
         HomeSectionType.hero => PictureCard(
             title: section.title,
@@ -351,7 +357,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (body != null) slivers.add(SliverToBoxAdapter(child: body));
     }
 
-    slivers.add(const SliverToBoxAdapter(child: SizedBox(height: DsSpace.s10)));
     return slivers;
   }
 
@@ -706,4 +711,3 @@ class _HomeSkeleton extends StatelessWidget {
     );
   }
 }
-

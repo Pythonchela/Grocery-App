@@ -69,6 +69,47 @@ class HomeSection {
   }
 }
 
+/// What the home page makes of the admin's layout.
+///
+/// A layout is the admin's to design, but a half-finished one must not empty the
+/// home page: a hero or banner with no picture is a blank card, and a layout with
+/// no category grid and no product row shows no products at all. So pictureless
+/// cards are left out, and when nothing in the layout shows the shop's goods the
+/// app adds its own categories and product lists beneath it.
+class HomeLayout {
+  /// The sections that will be drawn, in the admin's order.
+  final List<HomeSection> sections;
+
+  /// True when the layout shows no products, so the app's own lists follow it.
+  final bool needsCatalogue;
+
+  /// True when the admin has placed a reels section already.
+  final bool hasReelsSection;
+
+  const HomeLayout._(this.sections, this.needsCatalogue, this.hasReelsSection);
+
+  /// No usable layout: the app's built-in home page is used as it is.
+  bool get isEmpty => sections.isEmpty;
+
+  static HomeLayout plan(List<HomeSection> raw) {
+    final drawn = raw.where((s) {
+      final isPicture =
+          s.type == HomeSectionType.hero || s.type == HomeSectionType.banner;
+      return !isPicture || (s.imageUrl != null && s.imageUrl!.isNotEmpty);
+    }).toList();
+
+    final showsGoods = drawn.any((s) =>
+        s.type == HomeSectionType.categoryGrid ||
+        s.type == HomeSectionType.productRow);
+
+    return HomeLayout._(
+      drawn,
+      !showsGoods,
+      drawn.any((s) => s.type == HomeSectionType.reels),
+    );
+  }
+}
+
 /// Where a section's `link_url` points, in terms the app can open.
 sealed class HomeLink {
   const HomeLink();
@@ -89,9 +130,8 @@ sealed class HomeLink {
       case 'product' when parts.length > 1:
         return ProductLink(parts[1]);
       case 'search':
-        return SearchLink(uri.queryParameters['q'] ??
-            uri.queryParameters['search'] ??
-            '');
+        return SearchLink(
+            uri.queryParameters['q'] ?? uri.queryParameters['search'] ?? '');
       case 'reels':
         return const ReelsLink();
       default:
