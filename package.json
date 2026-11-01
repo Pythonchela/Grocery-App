@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "tokens:build": "node packages/tokens/build.mjs",
-    "test": "node --test lib/productOptions.test.mjs lib/shopRules.test.mjs lib/storeRules.test.mjs lib/noVendors.test.mjs lib/integrationGuides.test.mjs lib/legalPages.test.mjs lib/productPage.test.mjs",
+    "test": "node --test lib/productOptions.test.mjs lib/shopRules.test.mjs lib/storeRules.test.mjs lib/noVendors.test.mjs lib/integrationGuides.test.mjs lib/legalPages.test.mjs lib/productPage.test.mjs lib/importRows.test.mjs",
     "dev": "npm run tokens:build && next dev",
     "build": "npm run tokens:build && next build --webpack",
     "start": "next start",

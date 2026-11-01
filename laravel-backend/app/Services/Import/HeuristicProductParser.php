@@ -3,6 +3,7 @@
 namespace App\Services\Import;
 
 use App\Services\Contracts\ProductParser;
+use App\Support\ProductDetails;
 use Illuminate\Support\Str;
 
 /**
@@ -35,13 +36,21 @@ class HeuristicProductParser implements ProductParser
 
     private const REQUIRED = ['title', 'price'];
 
+    /** Stock given to a product whose source does not say. The owner sets it in the import screen. */
+    protected int $defaultStock = 10;
+
+    /** Whether the last parse found named columns (or JSON) rather than guessing. */
+    protected bool $structured = false;
+
     public function parse(string $raw, array $context = []): array
     {
         $raw = trim($raw);
         $categories = $context['categories'] ?? [];
+        $this->defaultStock = max(0, (int) ($context['default_stock'] ?? 10));
+        $this->structured = false;
 
         if ($raw === '') {
-            return ['rows' => [], 'format' => 'empty', 'driver' => $this->driverName()];
+            return ['rows' => [], 'format' => 'empty', 'driver' => $this->driverName(), 'structured' => false];
         }
 
         [$format, $records] = $this->detectAndExtract($raw);
@@ -51,7 +60,30 @@ class HeuristicProductParser implements ProductParser
             $rows[] = $this->normaliseRow($record, $i, $categories);
         }
 
-        return ['rows' => $rows, 'format' => $format, 'driver' => $this->driverName()];
+        return ['rows' => $rows, 'format' => $format, 'driver' => $this->driverName(), 'structured' => $this->structured];
+    }
+
+    /**
+     * Drops title lines above a table ("Price list 2026", a shop name, blank
+     * rows) so the header row is the first line. Unchanged when no header is
+     * found in the first fifteen lines.
+     */
+    public function stripPreamble(string $raw): string
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $raw);
+
+        foreach (array_slice($lines, 0, 15, true) as $i => $line) {
+            foreach (["\t", ',', ';', '|'] as $delim) {
+                $cells = $delim === ',' ? str_getcsv($line) : explode($delim, $line);
+                $named = count(array_filter(array_map(fn ($c) => $this->matchField(trim((string) $c, " \t\"'|")), $cells)));
+
+                if ($named >= 2) {
+                    return implode("\n", array_slice($lines, $i));
+                }
+            }
+        }
+
+        return $raw;
     }
 
     protected function driverName(): string
@@ -69,6 +101,8 @@ class HeuristicProductParser implements ProductParser
             $records = array_is_list($json) ? $json : [$json];
             // Only treat as JSON records if entries are associative.
             if ($records && is_array(reset($records))) {
+                $this->structured = true;
+
                 return ['json', $records];
             }
         }
@@ -127,6 +161,7 @@ class HeuristicProductParser implements ProductParser
 
         $records = [];
         if ($recognised >= 2) {
+            $this->structured = true;
             foreach ($body as $line) {
                 $cells = $split($line);
                 $record = [];
@@ -177,7 +212,7 @@ class HeuristicProductParser implements ProductParser
 
     // ── Row normalisation ────────────────────────────────────────────────
 
-    private function normaliseRow(array $record, int $index, array $categories): array
+    protected function normaliseRow(array $record, int $index, array $categories): array
     {
         $issues = [];
         $confidence = [];
@@ -232,6 +267,15 @@ class HeuristicProductParser implements ProductParser
             }
         }
 
+        // Fields the model itself was unsure about are shown as such.
+        foreach ((array) ($record['unsure'] ?? []) as $field) {
+            if (is_string($field) && $field !== '') {
+                $confidence[$field] = min($confidence[$field] ?? 1.0, 0.4);
+            }
+        }
+
+        $weight = $this->toNumber($record['weight_grams'] ?? null);
+
         return [
             'index' => $index,
             'title' => $title,
@@ -245,10 +289,78 @@ class HeuristicProductParser implements ProductParser
             'images' => $images,
             'tags' => $this->toList($record['tags'] ?? null),
             'variants' => $variants,
+            'features' => $this->toBullets($record['features'] ?? null),
+            'specifications' => ProductDetails::specifications(is_array($record['specifications'] ?? null) ? $record['specifications'] : null) ?? [],
+            'manufacturer' => ProductDetails::manufacturer(is_array($record['manufacturer'] ?? null) ? $record['manufacturer'] : null) ?? [],
+            'weight_grams' => $weight !== null && $weight >= 1 ? (int) round($weight) : null,
+            'length_cm' => $this->toDimension($record['length_cm'] ?? null),
+            'width_cm' => $this->toDimension($record['width_cm'] ?? null),
+            'height_cm' => $this->toDimension($record['height_cm'] ?? null),
+            'photo_numbers' => array_values(array_filter(array_map('intval', (array) ($record['photo_numbers'] ?? [])), fn ($n) => $n > 0)),
+            'description_written_by_ai' => (bool) ($record['description_written_by_ai'] ?? false),
+            'notes' => $this->cleanText($record['notes'] ?? ''),
             'confidence' => $confidence,
             'issues' => $issues,
             'importable' => $title !== '' && $price !== null && $categoryId !== null,
         ];
+    }
+
+    /** @param array<int, mixed> $variants */
+    private function explicitVariants(array $variants, array $record): array
+    {
+        $fallbackStock = $this->toNumber($record['stock'] ?? null);
+        $out = [];
+        $seen = [];
+
+        foreach (array_slice($variants, 0, 60) as $v) {
+            if (! is_array($v)) {
+                continue;
+            }
+
+            $color = $this->cleanText($v['color'] ?? '') ?: null;
+            $size = $this->cleanText($v['size'] ?? '') ?: null;
+            $key = mb_strtolower(($color ?? '').'|'.($size ?? ''));
+
+            // The same colour and size twice is one variant, not two.
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
+            $stock = $this->toNumber($v['stock'] ?? null) ?? $fallbackStock;
+            $price = $this->toNumber($v['price'] ?? null);
+            $mrp = $this->toNumber($v['mrp'] ?? null);
+
+            $out[] = [
+                'color' => $color,
+                'size' => $size ?? ($color === null ? 'Standard' : null),
+                'sku' => $this->cleanText($v['sku'] ?? '') ?: null,
+                'stock' => $stock === null ? $this->defaultStock : max(0, (int) $stock),
+                'price' => $price !== null && $price > 0 ? $price : null,
+                'mrp' => $mrp !== null && $mrp > 0 ? $mrp : null,
+            ];
+        }
+
+        return $out ?: [['color' => null, 'size' => 'Standard', 'stock' => $this->defaultStock, 'sku' => null]];
+    }
+
+    /** Feature bullets keep their commas: "Machine wash, cold" is one point. */
+    private function toBullets($value): array
+    {
+        if (is_array($value)) {
+            $items = array_map(fn ($x) => $this->cleanText(is_scalar($x) ? $x : ''), $value);
+        } else {
+            $items = $value === null || $value === '' ? [] : array_map(fn ($x) => $this->cleanText($x), preg_split('/[\n|]+/', (string) $value));
+        }
+
+        return array_values(array_map(fn ($x) => mb_substr($x, 0, 500), array_filter($items, fn ($x) => $x !== '')));
+    }
+
+    private function toDimension($value): ?int
+    {
+        $n = $this->toNumber($value);
+
+        return $n !== null && $n >= 1 && $n <= 500 ? (int) round($n) : null;
     }
 
     /** Pull fields out of a prose blob like "Silk Saree — ₹3,499 (MRP ₹6,999), red/blue, sizes S-XL". */
@@ -323,12 +435,17 @@ class HeuristicProductParser implements ProductParser
         return $record;
     }
 
-    private function buildVariants(array $record): array
+    protected function buildVariants(array $record): array
     {
+        // A source that already lists its variants (the AI reader does) is taken as it is.
+        if (isset($record['variants']) && is_array($record['variants']) && array_is_list($record['variants']) && $record['variants'] && is_array($record['variants'][0])) {
+            return $this->explicitVariants($record['variants'], $record);
+        }
+
         $colors = $this->toList($record['color'] ?? null);
         $sizes = $this->toList($record['size'] ?? null);
         $stock = $this->toNumber($record['stock'] ?? null);
-        $stock = $stock === null ? 10 : (int) $stock;
+        $stock = $stock === null ? $this->defaultStock : (int) $stock;
         $sku = $this->cleanText($record['sku'] ?? '') ?: null;
 
         // Cartesian product when both axes are present, otherwise one axis,
@@ -387,7 +504,7 @@ class HeuristicProductParser implements ProductParser
         return $bestScore >= 82 ? $best : null;
     }
 
-    private function matchCategory($value, array $categories): array
+    protected function matchCategory($value, array $categories): array
     {
         $name = $this->cleanText((string) ($value ?? ''));
         if ($name === '' || ! $categories) {

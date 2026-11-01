@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import AiFillPanel from './AiFillPanel';
+import { formFromImportRow } from '../../lib/importRows';
 import {
   X, Plus, Trash2, Save, Package, Image, Tag, Layers,
   MapPin, Star, Zap, ShieldCheck, SlidersHorizontal, FileText, RefreshCw, Upload,
@@ -347,6 +349,14 @@ export default function ProductFormModal({ isOpen, onClose, product, categories,
 
   const setField = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
+  // A product read from photos or a document: fills only what is still empty.
+  const fillFromRow = (row) => {
+    const { form: next, filled } = formFromImportRow(form, row);
+    if (!product && !next.slug && next.title) next.slug = autoSlug(next.title);
+    setForm(next);
+    return { filled };
+  };
+
   const autoSlug = (title) => title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
   // Tag helpers
@@ -620,6 +630,7 @@ export default function ProductFormModal({ isOpen, onClose, product, categories,
               <div className="space-y-4">
                 <h3 className="font-black text-sm text-ink border-b border-line pb-2">Basic Product Information</h3>
 
+                <AiFillPanel token={token} onFill={fillFromRow} />
 
                 <div>
                   <label className="block text-ink-muted mb-1.5 font-bold" htmlFor="productformmodal-f1">Product Title <span className="text-danger">*</span></label>

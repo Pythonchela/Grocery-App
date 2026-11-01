@@ -53,6 +53,8 @@ return [
     */
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
+        // Left empty, the newest flash model the key can see is used (see GeminiClient).
+        'model' => env('GEMINI_MODEL'),
     ],
 
     /*

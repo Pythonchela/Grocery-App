@@ -2,91 +2,54 @@
 
 namespace App\Services\Import;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * LLM-backed parser. Used only when services.gemini.key is set; on any failure
- * (no key, network error, malformed response) it delegates to the heuristic
- * parser so bulk import never hard-fails.
+ * The AI driver for the plain-text import contract. Used when a Gemini key is set;
+ * on any failure (no key, network error, unusable answer) it hands the text to the
+ * built-in reader, so pasting a list never hard-fails.
  *
- * Extends the heuristic parser so normalisation, category matching, variant
- * building and validation stay in one place — the model only supplies the
- * field extraction, and its output is validated the same way as any other.
+ * The photo, PDF and document upload goes through {@see ProductImporter}; this class
+ * is what answers `ProductParser` for code that only has a string.
  */
 class GeminiProductParser extends HeuristicProductParser
 {
-    private const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-
     public function parse(string $raw, array $context = []): array
     {
-        $key = config('services.gemini.key');
+        $extractor = new AiProductExtractor(new GeminiClient());
 
-        if (blank($key) || trim($raw) === '') {
+        if (! $extractor->available() || trim($raw) === '') {
             return parent::parse($raw, $context);
+        }
+
+        // A table with named columns needs no model: it is read exactly.
+        $exact = parent::parse($raw, $context);
+        if ($exact['structured'] ?? false) {
+            return $exact;
         }
 
         try {
-            $records = $this->extractWithModel($raw, $key);
+            $found = $extractor->extract(
+                ['texts' => [['name' => 'Pasted text', 'text' => $raw, 'tabular' => false]], 'media' => []],
+                $context,
+            );
         } catch (\Throwable $e) {
-            Log::warning('[GeminiProductParser] falling back to heuristic: '.$e->getMessage());
+            Log::warning('[GeminiProductParser] falling back to the built-in reader: '.$e->getMessage());
 
-            return parent::parse($raw, $context);
+            return $exact;
         }
 
-        if (! $records) {
-            return parent::parse($raw, $context);
+        if ($found['records'] === []) {
+            return $exact;
         }
 
-        // Re-use the parent's normalisation so model output goes through the
-        // exact same validation, category matching and confidence pipeline.
-        $delimited = json_encode($records);
+        $rows = (new ImportRowFactory())->rows($found['records'], $context['categories'] ?? [], (int) ($context['default_stock'] ?? 10));
 
-        return parent::parse($delimited, $context) + ['driver' => 'gemini'];
+        return ['rows' => $rows, 'format' => 'document', 'driver' => 'gemini', 'structured' => true];
     }
 
     protected function driverName(): string
     {
         return 'gemini';
-    }
-
-    private function extractWithModel(string $raw, string $key): array
-    {
-        $prompt = <<<PROMPT
-        Extract product records from the text below.
-
-        Return ONLY a JSON array. Each element must use these keys, omitting any
-        you cannot determine: title, description, brand, category, price, mrp,
-        sku, stock, color, size, images (array of URLs), tags (array).
-
-        Rules:
-        - price is the selling price; mrp is the higher list price. Never invent one.
-        - Numbers must be plain (3499, not "₹3,499").
-        - Do not invent values that are not present in the text.
-        - If the text contains no products, return [].
-
-        TEXT:
-        {$raw}
-        PROMPT;
-
-        // Key in a header, not the URL: a failed request's exception message
-        // includes its URL, which would put the key in the logs.
-        $response = Http::timeout(20)
-            ->withHeaders(['x-goog-api-key' => $key])
-            ->post(self::ENDPOINT, [
-                'contents' => [['parts' => [['text' => $prompt]]]],
-                'generationConfig' => ['temperature' => 0, 'responseMimeType' => 'application/json'],
-            ]);
-
-        if (! $response->successful()) {
-            throw new \RuntimeException('Gemini HTTP '.$response->status());
-        }
-
-        $text = $response->json('candidates.0.content.parts.0.text', '[]');
-        $text = trim(str_replace(['```json', '```'], '', $text));
-
-        $decoded = json_decode($text, true);
-
-        return is_array($decoded) && array_is_list($decoded) ? $decoded : [];
     }
 }

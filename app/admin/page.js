@@ -35,7 +35,7 @@ import { useAdminAuth } from '../../components/admin/AdminAuthContext';
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'products', label: 'Products', icon: Package },
-  { id: 'import', label: 'Bulk Import', icon: UploadCloud, href: '/admin/import' },
+  { id: 'import', label: 'Import products', icon: UploadCloud, href: '/admin/import' },
   { id: 'categories', label: 'Categories', icon: Tag },
   { id: 'live', label: 'Live board', icon: Zap },
   { id: 'orders', label: 'Orders', icon: ShoppingCart },

@@ -23,6 +23,12 @@ class AIService
         $this->apiKey = is_string($key) && trim($key) !== '' ? $key : 'mock_key_for_now';
     }
 
+    /** The current Gemini model (Google retires names, so it is looked up rather than written here). */
+    protected function model(): string
+    {
+        return (new \App\Services\Import\GeminiClient($this->apiKey))->model();
+    }
+
     /**
      * Translates a natural language query into a structured search intent.
      */
@@ -44,7 +50,7 @@ class AIService
             "Return JSON with keys: categories (array), max_price (int or null), min_price (int or null), is_gift (bool), target_audience (string).";
 
         try {
-            $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])->post("{$this->baseUrl}/gemini-1.5-flash:generateContent", [
+            $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])->post("{$this->baseUrl}/{$this->model()}:generateContent", [
                 'contents' => [
                     ['parts' => [['text' => $prompt]]]
                 ]
@@ -82,7 +88,7 @@ class AIService
         $prompt = "Summarize these customer reviews for the product '{$productTitle}' into a concise, 2-3 sentence paragraph highlighting pros and cons:\n\n{$reviewsText}";
 
         try {
-            $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])->post("{$this->baseUrl}/gemini-1.5-flash:generateContent", [
+            $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])->post("{$this->baseUrl}/{$this->model()}:generateContent", [
                 'contents' => [
                     ['parts' => [['text' => $prompt]]]
                 ]
@@ -223,7 +229,7 @@ class AIService
         $prompt = "You are a fraud detection AI. Rate the following review text from 0 to 100 on how likely it is to be fake, spam, or incentivized. Return ONLY an integer between 0 and 100. Review: '{$body}'";
 
         try {
-            $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])->post("{$this->baseUrl}/gemini-1.5-flash:generateContent", [
+            $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])->post("{$this->baseUrl}/{$this->model()}:generateContent", [
                 'contents' => [
                     ['parts' => [['text' => $prompt]]]
                 ]

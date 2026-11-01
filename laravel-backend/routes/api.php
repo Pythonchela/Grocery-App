@@ -74,6 +74,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         ->middleware('auth.optional');
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         // AI-assisted bulk import: preview parses + scores, commit writes.
+        Route::post('/admin/products/import/parse', [\App\Http\Controllers\Api\ProductImportController::class, 'parse'])
+            ->middleware('throttle:sensitive-write');
         Route::post('/admin/products/import/preview', [\App\Http\Controllers\Api\ProductImportController::class, 'preview']);
         Route::post('/admin/products/import/commit', [\App\Http\Controllers\Api\ProductImportController::class, 'commit']);
     });
