@@ -64,13 +64,6 @@ function LayoutInner({ children }) {
                   India's trusted marketplace for authentic clothing, footwear, and lifestyle products.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                {[{label:'FB',href:'#'},{label:'IG',href:'#'},{label:'TW',href:'#'},{label:'YT',href:'#'}].map(s=>(
-                  <a key={s.label} href={s.href} className="w-8 h-8 rounded-full bg-surface-muted border border-line flex items-center justify-center text-[10px] font-black text-ink-muted hover:bg-ink hover:text-ink-inverse hover:border-ink transition">
-                    {s.label}
-                  </a>
-                ))}
-              </div>
             </div>
 
             {/* Shop column */}
@@ -96,10 +89,10 @@ function LayoutInner({ children }) {
               <ul className="space-y-2.5 text-xs font-semibold text-ink-muted">
                 {[
                   {label:'Track My Order', href:'/account/orders'},
-                  {label:'Returns & Refunds', href:'/account/returns'},
-                  {label:'Size Guide', href:'#'},
-                  {label:'FAQs', href:'#'},
-                  {label:'Contact Support', href:'#'},
+                  {label:'Returns & Refunds', href:'/refund-policy'},
+                  {label:'Shipping Policy', href:'/shipping-policy'},
+                  {label:'FAQs', href:'/faqs'},
+                  {label:'Contact Support', href:'/contact'},
                 ].map(l=>(
                   <li key={l.label}><a href={l.href} className="hover:text-ink transition">{l.label}</a></li>
                 ))}
@@ -111,11 +104,10 @@ function LayoutInner({ children }) {
               <h4 className="text-xs font-black text-ink uppercase tracking-widest">Company</h4>
               <ul className="space-y-2.5 text-xs font-semibold text-ink-muted">
                 {[
-                  {label:'About Us', href:'#'},
+                  {label:'About Us', href:'/about'},
                   {label:'Privacy Policy', href:'/privacy'},
                   {label:'Delete Account', href:'/delete-account'},
-                  {label:'Terms of Service', href:'#'},
-                  {label:'BIS IS 19000 Compliance', href:'#'},
+                  {label:'Terms of Service', href:'/terms'},
                 ].map(l=>(
                   <li key={l.label}><a href={l.href} className="hover:text-ink transition">{l.label}</a></li>
                 ))}

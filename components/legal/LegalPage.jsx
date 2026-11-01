@@ -48,3 +48,20 @@ export function List({ items }) {
     </ul>
   );
 }
+
+/** Questions and answers that open and close without any script. */
+export function Faq({ items }) {
+  return (
+    <div className="space-y-2">
+      {items.map(([question, answer]) => (
+        <details key={question} className="group rounded-card border border-line bg-surface px-4 py-3">
+          <summary className="cursor-pointer list-none font-bold text-ink flex items-center justify-between gap-3">
+            {question}
+            <span aria-hidden="true" className="text-ink-subtle transition group-open:rotate-45">+</span>
+          </summary>
+          <p className="mt-2 text-base text-ink-muted leading-relaxed">{answer}</p>
+        </details>
+      ))}
+    </div>
+  );
+}
