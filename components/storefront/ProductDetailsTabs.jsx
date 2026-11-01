@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 
+/** How many specification rows show before "See all". */
+const COLLAPSED_ROWS = 10;
+
 const MANUFACTURER_LABELS = [
   ['generic_name', 'Generic name'],
   ['country_of_origin', 'Country of origin'],
@@ -33,9 +36,22 @@ export default function ProductDetailsTabs({ product }) {
   ].filter(Boolean);
 
   const [active, setActive] = useState(tabs[0]?.id);
+  const [expanded, setExpanded] = useState(false);
   const current = tabs.find((t) => t.id === active) ? active : tabs[0]?.id;
 
   if (tabs.length === 0) return null;
+
+  // A long table shows its first rows, then "See all", the way the phone app does.
+  const totalRows = groups.reduce((n, g) => n + g.rows.length, 0);
+  const collapsible = totalRows > COLLAPSED_ROWS;
+  let budget = expanded || !collapsible ? totalRows : COLLAPSED_ROWS;
+  const shown = [];
+  for (const group of groups) {
+    if (budget <= 0) break;
+    const rows = group.rows.slice(0, budget);
+    budget -= rows.length;
+    shown.push({ ...group, rows });
+  }
 
   return (
     <div className="pt-6 border-t border-line">
@@ -64,7 +80,7 @@ export default function ProductDetailsTabs({ product }) {
 
       {current === 'specifications' && (
         <div id="pd-panel-specifications" role="tabpanel" aria-labelledby="pd-tab-specifications" className="space-y-5">
-          {groups.map((group, gi) => (
+          {shown.map((group, gi) => (
             <section key={gi}>
               <h4 className="text-sm font-black text-ink mb-1">{group.title}</h4>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
@@ -77,6 +93,16 @@ export default function ProductDetailsTabs({ product }) {
               </dl>
             </section>
           ))}
+          {collapsible && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              className="px-4 py-2 rounded-pill text-sm font-bold border border-line text-ink hover:border-line-strong"
+            >
+              {expanded ? 'See less' : `See all ${totalRows}`}
+            </button>
+          )}
         </div>
       )}
 

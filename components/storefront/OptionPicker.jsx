@@ -10,6 +10,7 @@ import {
   pickedIds,
   variantSwatch,
 } from '../../lib/productOptions';
+import { colourPhoto } from '../../lib/productPage';
 
 const money = (n) => `₹${Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
@@ -28,7 +29,9 @@ function hintFor(group) {
   return group.required ? 'Required' : 'Optional';
 }
 
-function Swatch({ colour, label, image, selected, disabled, onClick }) {
+/** A colour dot, or a small rounded photo when the colour has pictures of its own. */
+function Swatch({ colour, label, image, selected, disabled, onClick, square = false }) {
+  const shape = square ? 'rounded-card' : 'rounded-pill';
   return (
     <button
       type="button"
@@ -37,12 +40,12 @@ function Swatch({ colour, label, image, selected, disabled, onClick }) {
       aria-label={label}
       aria-pressed={selected}
       title={label}
-      className={`relative w-10 h-10 rounded-pill p-[3px] border-2 transition disabled:opacity-35 disabled:cursor-not-allowed ${
-        selected ? 'border-accent' : 'border-line hover:border-line-strong'
-      }`}
+      className={`relative p-[3px] border-2 transition disabled:opacity-35 disabled:cursor-not-allowed ${shape} ${
+        square ? 'w-14 h-16' : 'w-10 h-10'
+      } ${selected ? 'border-accent' : 'border-line hover:border-line-strong'}`}
     >
       <span
-        className="block w-full h-full rounded-pill overflow-hidden border border-line/60 bg-surface-sunken"
+        className={`block w-full h-full overflow-hidden border border-line/60 bg-surface-sunken ${shape}`}
         style={colour && !image ? { backgroundColor: colour } : undefined}
       >
         {image && <img src={image} alt="" className="w-full h-full object-cover" />}
@@ -287,10 +290,13 @@ export function VariantPicker({ variants = [], selected, onChange }) {
           <div className="flex flex-wrap gap-3">
             {colours.map((c) => {
               const inStock = variants.some((v) => v.color === c && v.stock > 0);
+              const photo = colourPhoto(variants, c);
               return (
                 <Swatch
                   key={c}
                   label={c}
+                  image={photo}
+                  square={Boolean(photo)}
                   colour={variants.filter((v) => v.color === c).map(variantSwatch).find(Boolean) || null}
                   selected={c === colour}
                   disabled={!inStock}

@@ -178,7 +178,7 @@ export function StoreProvider({ children }) {
     const signature = selectionSignature(options);
     const unitPrice = signature
       ? optionUnitPrice(variant?.price ?? product.price, groups, options)
-      : product.price;
+      : variant?.price ?? product.price;
 
     setCartItems((prev) => {
       const base = variant ? `${product.id}-${variant.id}` : product.id;
