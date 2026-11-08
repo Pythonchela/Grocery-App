@@ -29,6 +29,6 @@ echo "⚡ Deploying Next.js Frontend..."
 cd /var/www/marketplace-app
 npm ci
 npm run build
-pm2 restart bazaarx-frontend || pm2 start npm --name "bazaarx-frontend" -- start
+pm2 restart haatvia-frontend || pm2 start npm --name "haatvia-frontend" -- start
 
 echo "✅ Haatvia Marketplace Deployment Completed Successfully!"

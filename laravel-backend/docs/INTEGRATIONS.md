@@ -42,7 +42,7 @@ Leaving a secret field blank on save means "keep what is there".
   Wrong attempts are throttled (5 per 15 minutes per admin) and audited. There is no
   "sudo window", so a stolen session cannot ride one.
 - **Admins with no password** (created through Google or OTP) cannot save. Whoever runs the
-  server gives them one: `php artisan bazaarx:set-password their@email` (this also signs out
+  server gives them one: `php artisan haatvia:set-password their@email` (this also signs out
   their other sessions).
 - **Never shown again:** no endpoint returns a secret. The page shows only "set" and, for a
   long enough secret, its last four characters. Responses are `Cache-Control: no-store`.

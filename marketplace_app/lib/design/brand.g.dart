@@ -20,7 +20,7 @@ class DsBrand {
   static const String walletName = 'Haatvia Wallet';
   static const String loyaltyName = 'Haatvia Points';
   static const String responseLabel = 'Haatvia Response';
-  static const String storageNamespace = 'bazaarx';
+  static const String storageNamespace = 'haatvia';
   static const String currency = 'INR';
   static const String currencySymbol = '₹';
   static const String locale = 'en-IN';

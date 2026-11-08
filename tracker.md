@@ -87,7 +87,7 @@ Last Updated: 2026-08-03
 >
 > **2026-08-03 — Roles, admin bootstrap, appearance & design management.**
 > There was no way to create an admin except running the demo seeder, whose
-> password is printed in the README. Added `php artisan bazaarx:admin` —
+> password is printed in the README. Added `php artisan haatvia:admin` —
 > prompts for the password rather than taking it as an argument, enforces a
 > 12-character minimum, and can promote an existing account (revoking its
 > sessions so it re-authenticates at the new level).

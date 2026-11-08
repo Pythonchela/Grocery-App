@@ -140,7 +140,7 @@ export default function IntegrationsClient() {
           <p className="font-bold flex items-center gap-2"><Lock className="w-4 h-4" /> Your account has no password</p>
           <p className="text-sm text-ink-muted mt-1">
             Changes are confirmed with your password, so you cannot save yet. Whoever runs the
-            server can set one with <code className="font-mono">php artisan bazaarx:set-password your@email</code>.
+            server can set one with <code className="font-mono">php artisan haatvia:set-password your@email</code>.
           </p>
         </div>
       )}

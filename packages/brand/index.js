@@ -39,7 +39,7 @@ const base = {
 
   // Storage key prefix. Namespaced per brand so two brands served from the same
   // origin can't read each other's session.
-  storageNamespace: 'bazaarx',
+  storageNamespace: 'haatvia',
 
   // Currency & locale
   currency: 'INR',

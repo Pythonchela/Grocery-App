@@ -287,7 +287,7 @@ class IntegrationSettingsTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath('code', 'password_not_set');
 
-        $this->assertStringContainsString('bazaarx:set-password', $response->json('message'));
+        $this->assertStringContainsString('haatvia:set-password', $response->json('message'));
         $this->assertSame(0, IntegrationSetting::count());
 
         $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/integrations')

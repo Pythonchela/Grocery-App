@@ -480,7 +480,7 @@ class IntegrationController extends Controller
             throw new HttpResponseException(response()->json([
                 'status' => 'error',
                 'code' => 'password_not_set',
-                'message' => 'This account has no password, so a change cannot be confirmed. Ask whoever runs the server to set one: php artisan bazaarx:set-password '.$user->email,
+                'message' => 'This account has no password, so a change cannot be confirmed. Ask whoever runs the server to set one: php artisan haatvia:set-password '.$user->email,
             ], 422));
         }
 

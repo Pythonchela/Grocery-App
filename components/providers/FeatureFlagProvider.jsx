@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "bazaarx_experiments";
+const STORAGE_KEY = "haatvia_experiments";
 
 /**
  * Experiment definitions. `variants` are weighted equally; add an experiment

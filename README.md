@@ -51,7 +51,7 @@ php artisan key:generate
 touch database/database.sqlite   # a file database is fine for trying it out
 php artisan migrate
 php artisan db:seed --class=StarterCatalogSeeder   # optional: ten sample products (zero stock)
-php artisan bazaarx:admin     # creates the owner's login
+php artisan haatvia:admin     # creates the owner's login
 php artisan serve --port=8001
 
 # 2. The website (from the project root)

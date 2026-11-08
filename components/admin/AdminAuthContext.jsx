@@ -46,8 +46,8 @@ export function AdminAuthProvider({ children }) {
     // apiClient dispatches this when the API rejects a token, so an expired
     // session bounces to the login screen instead of rendering empty data.
     const onUnauthorized = () => { clearAdminSession(); setSession(null); };
-    window.addEventListener('bazaarx:unauthorized', onUnauthorized);
-    return () => window.removeEventListener('bazaarx:unauthorized', onUnauthorized);
+    window.addEventListener('haatvia:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('haatvia:unauthorized', onUnauthorized);
   }, []);
 
   const login = useCallback((token, user) => {

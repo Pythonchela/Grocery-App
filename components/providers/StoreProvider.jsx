@@ -16,7 +16,7 @@ import { FALLBACK_STORE_CONFIG, readStoreConfig } from '../../lib/shopRules';
 const StoreContext = createContext();
 
 /** Where a captured `?ref=` code waits between the visit and the signup. */
-const REFERRAL_KEY = 'bazaarx_referral_code';
+const REFERRAL_KEY = 'haatvia_referral_code';
 
 /**
  * Reads and clears the stored code in one step.
@@ -66,7 +66,7 @@ export function StoreProvider({ children }) {
   // Load from localStorage on mount (if available)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('bazaarx_cart');
+      const saved = localStorage.getItem('haatvia_cart');
       if (saved) setCartItems(JSON.parse(saved));
     } catch (e) { /* non-critical: ignore */ }
     setCartLoaded(true);
@@ -88,8 +88,8 @@ export function StoreProvider({ children }) {
 
     // apiFetch fires this when the API rejects our token.
     const onUnauthorized = () => { setAuthToken(null); setAuthUser(null); };
-    window.addEventListener('bazaarx:unauthorized', onUnauthorized);
-    return () => window.removeEventListener('bazaarx:unauthorized', onUnauthorized);
+    window.addEventListener('haatvia:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('haatvia:unauthorized', onUnauthorized);
   }, []);
 
   const login = async (email, password) => {
@@ -149,7 +149,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!cartLoaded) return;
     try {
-      localStorage.setItem('bazaarx_cart', JSON.stringify(cartItems));
+      localStorage.setItem('haatvia_cart', JSON.stringify(cartItems));
     } catch (e) { /* non-critical: ignore */ }
   }, [cartItems, cartLoaded]);
 

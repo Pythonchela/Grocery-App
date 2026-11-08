@@ -6,7 +6,7 @@ import { useStore } from '../providers/StoreProvider';
 import { apiFetch, formatINR } from '../../lib/apiClient';
 import { etaPhrase, fastestOption, generalDelivery } from '../../lib/productPage';
 
-const PIN_KEY = 'bazaarx_pincode';
+const PIN_KEY = 'haatvia_pincode';
 const PIN = /^[1-9][0-9]{5}$/;
 
 function rememberedPin() {

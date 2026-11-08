@@ -15,15 +15,15 @@ use Illuminate\Support\Facades\Validator;
  * running the demo seeder — creates a known email and a password that is in the
  * README, which is fine for a demo and unacceptable for anyone's live store.
  *
- *     php artisan bazaarx:admin
- *     php artisan bazaarx:admin --email=ops@shop.in --name="Ops" --role=SUB_ADMIN
+ *     php artisan haatvia:admin
+ *     php artisan haatvia:admin --email=ops@shop.in --name="Ops" --role=SUB_ADMIN
  *
  * The password is prompted for and never passed as an argument, so it does not
  * land in shell history or in the process list.
  */
 class CreateAdminUser extends Command
 {
-    protected $signature = 'bazaarx:admin
+    protected $signature = 'haatvia:admin
         {--email= : Email address to sign in with}
         {--name= : Display name}
         {--phone= : Optional mobile number}

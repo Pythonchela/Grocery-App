@@ -16,14 +16,14 @@ use Illuminate\Support\Facades\Validator;
  * otherwise set its own password and then use it. Server access is the trusted
  * route, so this is it.
  *
- *     php artisan bazaarx:set-password ops@shop.in
+ *     php artisan haatvia:set-password ops@shop.in
  *
  * The password is prompted for, never passed as an argument, so it stays out of
  * shell history and the process list.
  */
 class SetAdminPassword extends Command
 {
-    protected $signature = 'bazaarx:set-password {email : The admin account\'s email address}';
+    protected $signature = 'haatvia:set-password {email : The admin account\'s email address}';
 
     protected $description = 'Set or reset the password of an admin account';
 

@@ -52,7 +52,7 @@ today.
 - New server, new database, new `APP_KEY`, new `.env` (`APP_URL`, `FRONTEND_URLS` including the new
   website, database, `PAYMENT` and mail settings).
 - Deploy `laravel-backend` and the website from `E:\Marketplace Single Vendor`.
-- Run the migrations, create the owner with `php artisan bazaarx:admin`, start the scheduler
+- Run the migrations, create the owner with `php artisan haatvia:admin`, start the scheduler
   (`schedule:run` every minute) and the queue worker.
 - Copy the privacy and delete-account pages into the single-store website, so the Play policy URL
   is on the new domain.

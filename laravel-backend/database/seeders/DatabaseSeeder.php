@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('production') && env('DEMO_SEED_CONFIRM') !== 'yes') {
             throw new \RuntimeException(
                 'Refusing to run the demo seeder in production: it creates admin logins with published passwords. '
-                .'Create your first admin with `php artisan bazaarx:admin` instead.'
+                .'Create your first admin with `php artisan haatvia:admin` instead.'
             );
         }
 

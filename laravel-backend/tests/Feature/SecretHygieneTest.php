@@ -92,7 +92,7 @@ class SecretHygieneTest extends TestCase
         }
     }
 
-    // ── bazaarx:set-password ────────────────────────────────────────────
+    // ── haatvia:set-password ────────────────────────────────────────────
 
     public function test_an_admin_without_a_password_can_be_given_one(): void
     {
@@ -100,7 +100,7 @@ class SecretHygieneTest extends TestCase
         $admin->forceFill(['password' => null])->save();
         $admin->createToken('old-session');
 
-        $this->artisan('bazaarx:set-password', ['email' => strtoupper($admin->email)])
+        $this->artisan('haatvia:set-password', ['email' => strtoupper($admin->email)])
             ->expectsQuestion('New password (min. 10 characters)', 'a-good-long-password')
             ->expectsQuestion('Repeat the password', 'a-good-long-password')
             ->assertSuccessful();
@@ -114,8 +114,8 @@ class SecretHygieneTest extends TestCase
         $customer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
         $before = $customer->password;
 
-        $this->artisan('bazaarx:set-password', ['email' => $customer->email])->expectsOutputToContain('No admin account with that email.')->assertFailed();
-        $this->artisan('bazaarx:set-password', ['email' => 'nobody@nowhere.test'])->expectsOutputToContain('No admin account with that email.')->assertFailed();
+        $this->artisan('haatvia:set-password', ['email' => $customer->email])->expectsOutputToContain('No admin account with that email.')->assertFailed();
+        $this->artisan('haatvia:set-password', ['email' => 'nobody@nowhere.test'])->expectsOutputToContain('No admin account with that email.')->assertFailed();
 
         $this->assertSame($before, $customer->fresh()->password);
     }
@@ -125,12 +125,12 @@ class SecretHygieneTest extends TestCase
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $before = $admin->password;
 
-        $this->artisan('bazaarx:set-password', ['email' => $admin->email])
+        $this->artisan('haatvia:set-password', ['email' => $admin->email])
             ->expectsQuestion('New password (min. 10 characters)', 'short')
             ->expectsQuestion('Repeat the password', 'short')
             ->assertFailed();
 
-        $this->artisan('bazaarx:set-password', ['email' => $admin->email])
+        $this->artisan('haatvia:set-password', ['email' => $admin->email])
             ->expectsQuestion('New password (min. 10 characters)', 'a-good-long-password')
             ->expectsQuestion('Repeat the password', 'a-different-password')
             ->assertFailed();
