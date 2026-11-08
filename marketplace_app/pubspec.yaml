@@ -1,5 +1,5 @@
 name: marketplace_app
-description: "BazaarX marketplace — Flutter client for the shared Laravel API."
+description: "Haatvia marketplace — Flutter client for the shared Laravel API."
 publish_to: 'none'
 version: 1.0.2+4
 

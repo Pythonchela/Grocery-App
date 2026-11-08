@@ -3,23 +3,23 @@
 // Brand identity, projected for Flutter. Same reason as the colours: a second
 // hand-maintained copy of a legal entity name is one copy too many.
 class DsBrand {
-  static const String id = 'bazaarx';
-  static const String name = 'BazaarX';
-  static const String nameUpper = 'BAZAARX';
-  static const String nameDisplay = 'BAZAAR';
-  static const String nameAccent = 'X';
-  static const String logoInitials = 'BX';
-  static const String tagline = 'BHARAT PULSE';
+  static const String id = 'haatvia';
+  static const String name = 'Haatvia';
+  static const String nameUpper = 'HAATVIA';
+  static const String nameDisplay = 'HAAT';
+  static const String nameAccent = 'VIA';
+  static const String logoInitials = 'HV';
+  static const String tagline = 'SHOP ONLINE';
   static const String editionLabel = 'Spring \'26 Edition';
-  static const String appStoreName = 'BazaarX App Store';
-  static const String devDomain = 'BazaarX.dev';
-  static const String legalEntity = 'BharatPulse Marketplace Technologies Pvt Ltd';
-  static const String domain = 'bazaarx.in';
-  static const String supportEmail = 'support@bazaarx.in';
-  static const String grievanceOfficer = 'Grievance Officer, BharatPulse Marketplace Technologies Pvt Ltd';
-  static const String walletName = 'BazaarX Wallet';
-  static const String loyaltyName = 'BazaarX Points';
-  static const String responseLabel = 'BazaarX Response';
+  static const String appStoreName = 'Haatvia App Store';
+  static const String devDomain = 'Haatvia.dev';
+  static const String legalEntity = 'Haatvia';
+  static const String domain = 'rentalmoney.in';
+  static const String supportEmail = 'solutionsintellihive@gmail.com';
+  static const String grievanceOfficer = 'Grievance Officer, Haatvia';
+  static const String walletName = 'Haatvia Wallet';
+  static const String loyaltyName = 'Haatvia Points';
+  static const String responseLabel = 'Haatvia Response';
   static const String storageNamespace = 'bazaarx';
   static const String currency = 'INR';
   static const String currencySymbol = '₹';

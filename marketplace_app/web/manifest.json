@@ -1,6 +1,6 @@
 {
-    "name": "marketplace_app",
-    "short_name": "marketplace_app",
+    "name": "Haatvia",
+    "short_name": "Haatvia",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

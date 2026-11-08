@@ -1,4 +1,4 @@
-export const metadata = { title: "You're offline | BazaarX" };
+export const metadata = { title: "You're offline | Haatvia" };
 
 export default function OfflinePage() {
   return (

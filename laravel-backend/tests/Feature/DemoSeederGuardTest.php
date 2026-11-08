@@ -23,7 +23,7 @@ class DemoSeederGuardTest extends TestCase
             $this->assertStringContainsString('Refusing to run the demo seeder in production', $e->getMessage());
         }
 
-        $this->assertSame(0, User::where('email', 'admin@bazaarx.com')->count());
+        $this->assertSame(0, User::where('email', 'admin@haatvia.test')->count());
         $this->assertSame(0, User::where('email', 'admin@example.com')->count());
     }
 }

@@ -42,7 +42,7 @@ class SmsGatewayTest extends TestCase
     {
         Http::fake(['control.msg91.com/*' => Http::response(['type' => 'success', 'message' => 'abc'])]);
 
-        $this->msg91()->send(SmsMessage::otp('9876543210', '482913', 'BazaarX'));
+        $this->msg91()->send(SmsMessage::otp('9876543210', '482913', 'Haatvia'));
 
         Http::assertSent(function (Request $r) {
             return $r->url() === 'https://control.msg91.com/api/v5/flow'
@@ -142,7 +142,7 @@ class SmsGatewayTest extends TestCase
     {
         Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SM1'], 201)]);
 
-        $this->twilio()->send(SmsMessage::otp('9876543210', '482913', 'BazaarX'));
+        $this->twilio()->send(SmsMessage::otp('9876543210', '482913', 'Haatvia'));
 
         Http::assertSent(function (Request $r) {
             return $r->url() === 'https://api.twilio.com/2010-04-01/Accounts/'.self::TWILIO_SID.'/Messages.json'

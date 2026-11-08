@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting BazaarX Marketplace Deployment..."
+echo "🚀 Starting Haatvia Marketplace Deployment..."
 
 # 1. Navigate to app root
 cd /var/www/marketplace-app
@@ -31,4 +31,4 @@ npm ci
 npm run build
 pm2 restart bazaarx-frontend || pm2 start npm --name "bazaarx-frontend" -- start
 
-echo "✅ BazaarX Marketplace Deployment Completed Successfully!"
+echo "✅ Haatvia Marketplace Deployment Completed Successfully!"

@@ -2,7 +2,7 @@
  * k6 load test.
  *
  *   k6 run load-test.js
- *   k6 run -e WEB_URL=https://staging.bazaarx.in -e API_URL=https://api.bazaarx.in/api/v1 load-test.js
+ *   k6 run -e WEB_URL=https://staging.rentalmoney.in -e API_URL=https://api.rentalmoney.in/api/v1 load-test.js
  *
  * Exercises the two tiers separately: Next.js renders pages, the Laravel API
  * serves data. The previous version hit `/api/products?q=` on the web origin —

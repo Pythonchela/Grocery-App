@@ -5,4 +5,4 @@ Allow: /category/
 Allow: /reels
 Disallow: /admin
 
-Sitemap: https://bazaarx.in/sitemap.xml
+Sitemap: https://rentalmoney.in/sitemap.xml

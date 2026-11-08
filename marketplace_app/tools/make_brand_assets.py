@@ -24,7 +24,7 @@ WHITE = (255, 255, 255)
 
 APPS = {
     'main': dict(
-        name='BazaarX',
+        name='Haatvia',
         tagline='Shop everything you love',
         background=ACCENT,
         tag=None,
@@ -58,9 +58,9 @@ def mark(size, app, *, rounded, safe=1.0, transparent_bg=False):
     has_tag = app['tag'] is not None
     text_h = 0.46 * safe
     f = font(s * text_h)
-    w = d.textlength('BX', font=f)
+    w = d.textlength('HV', font=f)
     top = s * ((0.10 if has_tag else 0.22) + (1 - safe) * 0.5)
-    d.text(((s - w) / 2, top), 'BX', font=f, fill=WHITE + (255,))
+    d.text(((s - w) / 2, top), 'HV', font=f, fill=WHITE + (255,))
 
     if has_tag:
         bx0, bx1 = s * (0.5 - 0.36 * safe), s * (0.5 + 0.36 * safe)

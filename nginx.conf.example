@@ -1,4 +1,4 @@
-# Nginx Configuration for BazaarX Marketplace on Hostinger VPS
+# Nginx Configuration for Haatvia Marketplace on Hostinger VPS
 # Place this in /etc/nginx/sites-available/marketplace and symlink to /etc/nginx/sites-enabled/
 
 # 1. FRONTEND SERVER BLOCK (Next.js Storefront & Admin Panel)

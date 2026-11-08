@@ -81,7 +81,7 @@ class PorterCarrier extends BaseCarrier
             $response = $this->http($this->authHeaders())->post($this->baseUrl().'/v1/get_quote', [
                 'pickup_details' => ['lat' => $shipment->pickup['lat'] ?? config('delivery.pickup_address.lat'), 'lng' => $shipment->pickup['lng'] ?? config('delivery.pickup_address.lng')],
                 'drop_details' => ['pincode' => $shipment->dropPincode],
-                'customer' => ['name' => 'BazaarX', 'mobile' => ['country_code' => '+91', 'number' => $shipment->pickup['phone'] ?? config('delivery.pickup_address.phone')]],
+                'customer' => ['name' => 'Haatvia', 'mobile' => ['country_code' => '+91', 'number' => $shipment->pickup['phone'] ?? config('delivery.pickup_address.phone')]],
             ]);
 
             return $response->successful()

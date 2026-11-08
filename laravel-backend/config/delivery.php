@@ -33,7 +33,7 @@ return [
     'pickup_pincode' => env('DELIVERY_PICKUP_PINCODE', '560103'),
 
     'pickup_address' => [
-        'name' => env('DELIVERY_PICKUP_NAME', 'BazaarX Fulfilment Centre'),
+        'name' => env('DELIVERY_PICKUP_NAME', 'Haatvia Fulfilment Centre'),
         'phone' => env('DELIVERY_PICKUP_PHONE', '9000000000'),
         'line1' => env('DELIVERY_PICKUP_LINE1', 'Plot 14, HSR Layout Sector 2'),
         'city' => env('DELIVERY_PICKUP_CITY', 'Bengaluru'),

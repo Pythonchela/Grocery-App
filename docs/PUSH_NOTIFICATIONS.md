@@ -14,7 +14,7 @@ code is finished and switches itself on when it finds the two files below.
 1. Open <https://console.firebase.google.com> and **Add project**. Analytics is
    not needed.
 2. **Project settings > General > Your apps > Android**. Package name:
-   `in.bazaarx.marketplace_app`. Register the app and **download
+   `in.haatvia.shop`. Register the app and **download
    `google-services.json`**.
 3. **Project settings > Service accounts > Generate new private key**. This
    downloads a second JSON file - the service account the server uses to send.

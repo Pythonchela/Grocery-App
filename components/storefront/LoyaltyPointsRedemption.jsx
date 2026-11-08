@@ -19,7 +19,7 @@ export default function LoyaltyPointsRedemption({ availablePoints = 1250, conver
           <Gift size={20} />
         </div>
         <div>
-          <h4 className="font-semibold text-ink-inverse">BazaarX Loyalty Points</h4>
+          <h4 className="font-semibold text-ink-inverse">Haatvia Loyalty Points</h4>
           <p className="text-sm text-ink-subtle">Available: {availablePoints} points (₹{maxRedeemableValue})</p>
         </div>
       </div>

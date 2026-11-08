@@ -2,8 +2,8 @@ import { apiFetch, mapProduct } from '../../lib/apiClient';
 import SearchClient from '../../components/storefront/SearchClient';
 
 export const metadata = {
-  title: 'Search Results | BazaarX',
-  description: 'Search for the best products on BazaarX.',
+  title: 'Search Results | Haatvia',
+  description: 'Search for the best products on Haatvia.',
 };
 
 export default async function SearchPage({ searchParams }) {

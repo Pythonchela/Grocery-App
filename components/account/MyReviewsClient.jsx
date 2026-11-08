@@ -115,7 +115,7 @@ export default function MyReviewsClient() {
                       )}
                       {r.admin_reply && (
                         <div className="mt-2.5 bg-surface-muted border-l-2 border-line-strong rounded-r-control px-3 py-2">
-                          <p className="text-[10px] font-black text-ink uppercase tracking-wide">BazaarX Response</p>
+                          <p className="text-[10px] font-black text-ink uppercase tracking-wide">Haatvia Response</p>
                           <p className="text-[11px] text-ink-muted font-medium mt-0.5">{r.admin_reply}</p>
                         </div>
                       )}

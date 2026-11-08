@@ -4,7 +4,7 @@ import { apiFetch, mapProduct, formatINR } from '../../../lib/apiClient';
 import { Gift } from 'lucide-react';
 
 export const metadata = {
-  title: 'Shared Wishlist | BazaarX',
+  title: 'Shared Wishlist | Haatvia',
 };
 
 export default async function SharedWishlistPage({ params }) {
@@ -28,7 +28,7 @@ export default async function SharedWishlistPage({ params }) {
         </div>
         <h1 className="text-3xl font-black text-ink">{wishlist.name}</h1>
         <p className="text-ink-subtle font-medium mt-1">
-          Shared by {wishlist.user?.name || 'a BazaarX shopper'} · {items.length} item{items.length === 1 ? '' : 's'}
+          Shared by {wishlist.user?.name || 'a Haatvia shopper'} · {items.length} item{items.length === 1 ? '' : 's'}
         </p>
       </div>
 

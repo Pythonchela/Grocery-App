@@ -121,7 +121,7 @@ export default function ProductQnA({ productId }) {
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {a.is_official && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-black bg-accent-soft text-accent px-2 py-0.5 rounded-pill">
-                            <ShieldCheck className="w-3 h-3" /> BazaarX
+                            <ShieldCheck className="w-3 h-3" /> Haatvia
                           </span>
                         )}
                         {a.is_verified_buyer && (

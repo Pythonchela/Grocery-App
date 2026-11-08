@@ -1571,7 +1571,7 @@ export default function ProductFormModal({ isOpen, onClose, product, categories,
 
                 <div className="bg-warning-soft border border-warning p-4 rounded-card space-y-1 text-[11px]">
                   <span className="font-black text-warning block">Google Search Preview:</span>
-                  <span className="text-accent font-bold block">{form.title || 'Product Title Here'} — BazaarX</span>
+                  <span className="text-accent font-bold block">{form.title || 'Product Title Here'} — Haatvia</span>
                   <span className="text-ink-muted">{form.seoDescription || 'Your meta description will appear here...'}</span>
                 </div>
 

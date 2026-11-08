@@ -44,7 +44,7 @@ export default function AdminLoginGate() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-surface/10 backdrop-blur-sm rounded-panel border border-surface/20 mb-4">
             <Shield className="w-8 h-8 text-warning" />
           </div>
-          <h1 className="text-2xl font-black text-ink-inverse">BazaarX Admin Portal</h1>
+          <h1 className="text-2xl font-black text-ink-inverse">Haatvia Admin Portal</h1>
           <p className="text-ink-subtle text-sm mt-1">Sign in with your admin credentials</p>
         </div>
 
@@ -61,7 +61,7 @@ export default function AdminLoginGate() {
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
                 <input id="admin-email" type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="admin@bazaarx.com"
+                  placeholder="you@example.com"
                   className="w-full bg-surface/10 border border-surface/20 rounded-card pl-11 pr-4 py-3 text-ink-inverse placeholder-ink-subtle text-sm font-semibold focus:outline-none focus:border-warning transition"
                 />
               </div>
@@ -81,10 +81,6 @@ export default function AdminLoginGate() {
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowUpRight className="w-4 h-4" />}
               {loading ? 'Verifying...' : 'Sign In'}
             </button>
-            {/* The seeded demo login. Never advertised on a live site. */}
-            {process.env.NODE_ENV !== 'production' && (
-              <p className="text-center text-ink-subtle text-[11px] font-medium">Demo login: admin@bazaarx.com / BazaarX@2026!</p>
-            )}
           </form>
         </div>
       </div>

@@ -27,7 +27,7 @@ if (!releaseKeyPropertiesFile.exists() &&
 }
 
 android {
-    namespace = "in.bazaarx.marketplace_app"
+    namespace = "in.haatvia.shop"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -45,7 +45,7 @@ android {
 
     defaultConfig {
         // Change this per client: it identifies the app on the phone and in the Play Store.
-        applicationId = "in.bazaarx.shop"
+        applicationId = "in.haatvia.shop"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

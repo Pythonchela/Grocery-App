@@ -131,7 +131,7 @@ export default function ReturnsClient() {
                     <p className="text-[11px] text-success bg-success-soft border border-success rounded-control p-2.5 mt-3 font-bold">
                       {formatINR(r.refund_amount)} refunded
                       {r.refund_mode === 'WALLET'
-                        ? ' to your BazaarX wallet.'
+                        ? ' to your Haatvia wallet.'
                         : ' to your original payment method — expect it within 5–7 business days.'}
                     </p>
                   )}

@@ -81,7 +81,7 @@ export default function AnalyticsDashboard() {
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bazaarx-analytics-${days}d.csv`;
+    a.download = `haatvia-analytics-${days}d.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

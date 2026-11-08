@@ -1,6 +1,6 @@
 # Moving the single-store app to its own backend and database
 
-Goal: the single-store app (`in.bazaarx.shop`) runs on its own backend and database, keeps every
+Goal: the single-store app (`in.haatvia.shop`) runs on its own backend and database, keeps every
 connection it has today (Google sign-in, Razorpay, Shiprocket, push, SMS, email, storage), and nothing
 that works today breaks on the way. The multi-vendor marketplace is not touched at any point.
 
@@ -101,8 +101,8 @@ change or remove an existing one**:
 
 | Shared account | Do this | Never do this |
 |---|---|---|
-| Google Cloud project | Add the new website address as an extra Authorized JavaScript origin; add Android clients for `in.bazaarx.shop` | Edit or delete an existing client, origin or the consent screen |
-| Firebase | Register `in.bazaarx.shop` as its own Android app; make a new service-account key | Delete or rotate the marketplace's key or app |
+| Google Cloud project | Add the new website address as an extra Authorized JavaScript origin; add Android clients for `in.haatvia.shop` | Edit or delete an existing client, origin or the consent screen |
+| Firebase | Register `in.haatvia.shop` as its own Android app; make a new service-account key | Delete or rotate the marketplace's key or app |
 | Razorpay | Add a second webhook for the new address with its own secret | Edit or delete the marketplace's webhook; change the existing keys |
 | Shiprocket | Create a separate API user for the single store (up to four are allowed) | Reuse the marketplace's API user, or replace its webhook address |
 | SMS, email, Gemini, storage | Use a separate key, sender or bucket where the provider allows it | Share one bucket or rotate a key the marketplace uses |

@@ -152,7 +152,7 @@ export default function QnAModeration() {
                       <p className="text-[11px] text-ink-subtle mt-0.5 flex items-center gap-1.5">
                         {a.is_official && (
                           <span className="inline-flex items-center gap-1 bg-accent-soft text-accent px-1.5 py-0.5 rounded font-bold">
-                            <ShieldCheck className="w-3 h-3" /> BazaarX
+                            <ShieldCheck className="w-3 h-3" /> Haatvia
                           </span>
                         )}
                         {a.is_verified_buyer && (

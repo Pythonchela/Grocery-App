@@ -297,7 +297,7 @@ Legend: ⬜ Not Started | 🔄 In Progress | ✅ Completed | ⏸ On Hold
 | 8.4 | Verified Purchase badge | ✅ | Set only when the purchase gate passes; product ratings are real aggregates |
 | 8.5 | Helpful/Not Helpful votes | ✅ | One vote per user (unique index); re-voting flips rather than double-counting — verified |
 | 8.6 | Admin review moderation queue | ✅ | Pending queue with approve/reject |
-| 8.7 | Admin reply to reviews | ✅ | "BazaarX Response" shown on the PDP and in the customer's review history |
+| 8.7 | Admin reply to reviews | ✅ | "Haatvia Response" shown on the PDP and in the customer's review history |
 | 8.8 | Rating histogram display on PDP | ✅ | 5→1 histogram, click a bar to filter; plus 4 sort modes incl. "Most critical" |
 
 ### Wishlist

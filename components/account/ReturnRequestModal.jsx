@@ -114,7 +114,7 @@ export default function ReturnRequestModal({ item, onClose, onCreated }) {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: 'SOURCE', label: 'Original payment', note: '5–7 business days' },
-                  { id: 'WALLET', label: 'BazaarX Wallet', note: 'Instant' },
+                  { id: 'WALLET', label: 'Haatvia Wallet', note: 'Instant' },
                 ].map(m => (
                   <button key={m.id} type="button" onClick={() => setRefundMode(m.id)}
                     className={`p-3 rounded-card border text-left transition ${refundMode === m.id ? 'bg-inverse text-ink-inverse border-line-strong' : 'bg-surface border-line hover:border-line'}`}>

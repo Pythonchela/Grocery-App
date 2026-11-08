@@ -32,11 +32,15 @@ class DatabaseSeeder extends Seeder
         }
 
         // ── Users ────────────────────────────────────────────────────────
+        // No published password: use DEMO_ADMIN_PASSWORD, or a random one shown once.
+        $demoPassword = env('DEMO_ADMIN_PASSWORD') ?: \Illuminate\Support\Str::password(20, symbols: false);
+        $this->command?->info('Demo admin admin@haatvia.test, password: '.$demoPassword);
+
         $admin1 = User::updateOrCreate(
-            ['email' => 'admin@bazaarx.com'],
+            ['email' => 'admin@haatvia.test'],
             [
-                'name' => 'BazaarX Admin',
-                'password' => Hash::make('BazaarX@2026!'),
+                'name' => 'Haatvia Admin',
+                'password' => Hash::make($demoPassword),
                 'role' => 'ADMIN',
                 'status' => 'ACTIVE',
             ]
@@ -84,7 +88,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Hand-Embroidered Chanderi Silk Anarkali Set',
                 'slug' => 'chanderi-silk-anarkali-set',
                 'category' => 'ethnic-wear',
-                'brand' => 'BazaarX Heritage',
+                'brand' => 'Haatvia Heritage',
                 'mrp' => 6999, 'price' => 3499,
                 'is_new' => true,
                 'description' => "Draped in the grandeur of India's GI-tagged Chanderi heritage, hand-embroidered by master weavers from Madhya Pradesh using genuine 24K-tested Zari threads.",
@@ -227,7 +231,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Handcrafted Royal Tan Genuine Leather Mojari Jutti',
                 'slug' => 'royal-tan-leather-juttis',
                 'category' => 'footwear',
-                'brand' => 'BazaarX Heritage',
+                'brand' => 'Haatvia Heritage',
                 'mrp' => 2999, 'price' => 1499,
                 'is_new' => false,
                 'description' => 'Handcrafted by artisan shoemakers in Jaipur. 100% genuine vegetable-tanned leather with double-cushioned sole for bite-free comfort.',

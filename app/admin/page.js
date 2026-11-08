@@ -148,7 +148,7 @@ function TopBar({ section, collapsed, adminEmail }) {
     <header className={`fixed top-0 right-0 h-16 bg-surface border-b border-line z-30 flex items-center justify-between px-6 transition-all duration-300 ${collapsed ? 'left-20' : 'left-64'}`}>
       <div>
         <h1 className="font-black text-ink text-base">{titles[section] || 'Admin Panel'}</h1>
-        <p className="text-xs text-ink-subtle font-medium">BazaarX Admin Portal — Logged in as {adminEmail}</p>
+        <p className="text-xs text-ink-subtle font-medium">Haatvia Admin Portal — Logged in as {adminEmail}</p>
       </div>
       <div className="flex items-center gap-3">
         <button className="relative text-ink-subtle hover:text-ink p-2 rounded-pill hover:bg-surface-sunken transition">

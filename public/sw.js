@@ -1,5 +1,5 @@
-/* BazaarX service worker — offline shell + runtime caching. */
-const VERSION = 'bazaarx-v1';
+/* Haatvia service worker — offline shell + runtime caching. */
+const VERSION = 'haatvia-v1';
 const APP_SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 

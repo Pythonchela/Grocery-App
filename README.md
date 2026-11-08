@@ -4,7 +4,7 @@ A complete online store for **one business**: a customer website and app, and an
 admin panel for the owner. There are no vendors: nobody applies to sell, there are
 no shops to choose between, no commissions or payouts.
 
-This is a separate copy of the BazaarX marketplace with everything vendor-related
+This is a separate copy of the Haatvia marketplace with everything vendor-related
 taken out. It does not share code, a database or a server with the marketplace.
 
 ```

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| BazaarX Laravel REST API Routes
+| Haatvia Laravel REST API Routes
 |--------------------------------------------------------------------------
 */
 

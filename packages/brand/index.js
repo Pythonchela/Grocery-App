@@ -16,26 +16,26 @@ const base = {
   id: 'base',
 
   // Identity
-  name: 'BazaarX',
-  nameUpper: 'BAZAARX',
-  nameDisplay: 'BAZAAR', // logo text before the accent letter
-  nameAccent: 'X', // rendered in the accent colour
-  logoInitials: 'BX',
-  tagline: 'BHARAT PULSE',
+  name: 'Haatvia',
+  nameUpper: 'HAATVIA',
+  nameDisplay: 'HAAT', // logo text before the accent part
+  nameAccent: 'VIA', // rendered in the accent colour
+  logoInitials: 'HV',
+  tagline: 'SHOP ONLINE',
   editionLabel: "Spring '26 Edition",
-  appStoreName: 'BazaarX App Store',
-  devDomain: 'BazaarX.dev',
+  appStoreName: 'Haatvia App Store',
+  devDomain: 'Haatvia.dev',
 
   // Legal & contact
-  legalEntity: 'BharatPulse Marketplace Technologies Pvt Ltd',
-  domain: 'bazaarx.in',
-  supportEmail: 'support@bazaarx.in',
-  grievanceOfficer: 'Grievance Officer, BharatPulse Marketplace Technologies Pvt Ltd',
+  legalEntity: 'Haatvia',
+  domain: 'rentalmoney.in',
+  supportEmail: 'solutionsintellihive@gmail.com',
+  grievanceOfficer: 'Grievance Officer, Haatvia',
 
   // Product surface names
-  walletName: 'BazaarX Wallet',
-  loyaltyName: 'BazaarX Points',
-  responseLabel: 'BazaarX Response', // shown above an admin reply to a review
+  walletName: 'Haatvia Wallet',
+  loyaltyName: 'Haatvia Points',
+  responseLabel: 'Haatvia Response', // shown above an admin reply to a review
 
   // Storage key prefix. Namespaced per brand so two brands served from the same
   // origin can't read each other's session.
@@ -58,15 +58,15 @@ const base = {
 
 /** Registered brands. Add an entry to launch a differently-branded app. */
 const brands = {
-  bazaarx: { ...base, id: 'bazaarx' },
+  haatvia: { ...base, id: 'haatvia' },
 };
 
 /**
  * Resolve a brand by id, falling back to the default.
  * Set NEXT_PUBLIC_BRAND to switch a deployment without a code change.
  */
-export function getBrand(id = process.env.NEXT_PUBLIC_BRAND || 'bazaarx') {
-  return brands[id] || brands.bazaarx;
+export function getBrand(id = process.env.NEXT_PUBLIC_BRAND || 'haatvia') {
+  return brands[id] || brands.haatvia;
 }
 
 export const brand = getBrand();
@@ -74,16 +74,16 @@ export const brand = getBrand();
 /** SEO metadata derived from whichever brand is active. */
 export function getSeo(b = brand) {
   return {
-    title: `${b.name} | Next-Gen B2C Indian Marketplace`,
+    title: `${b.name} | Online Shop`,
     description:
       'Shop authentic Indian ethnic wear, electronics, footwear and artisanal decor with instant UPI payments, video reels, vernacular voice search and verified reviews.',
     keywords: `${b.name}, Indian marketplace, B2C shopping India, UPI checkout, verified reviews`,
     og: {
-      title: `${b.name} | Modern B2C Indian Marketplace`,
+      title: `${b.name} | Online Shop`,
       description: 'Video-first shopping and express delivery across India.',
       url: `https://${b.domain}`,
       siteName: b.name,
-      imageAlt: `${b.name} Indian Marketplace`,
+      imageAlt: `${b.name} online shop`,
     },
   };
 }

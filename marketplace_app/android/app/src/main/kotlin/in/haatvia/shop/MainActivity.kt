@@ -1,4 +1,4 @@
-package `in`.bazaarx.marketplace_app
+package `in`.haatvia.shop
 
 import io.flutter.embedding.android.FlutterActivity
 

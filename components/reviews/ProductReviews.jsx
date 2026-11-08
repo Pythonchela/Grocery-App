@@ -162,7 +162,7 @@ export default function ProductReviews({ productId }) {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-black text-ink text-sm">{r.user?.name || 'BazaarX Customer'}</span>
+                      <span className="font-black text-ink text-sm">{r.user?.name || 'Haatvia Customer'}</span>
                       {r.verified_purchase && (
                         <span className="flex items-center gap-1 text-[10px] font-black text-success bg-success-soft border border-success px-2 py-0.5 rounded-pill">
                           <ShieldCheck className="w-3 h-3" /> Verified Purchase
@@ -204,7 +204,7 @@ export default function ProductReviews({ productId }) {
                 {r.admin_reply && (
                   <div className="mt-3 bg-surface-muted border-l-2 border-line-strong rounded-r-control px-4 py-3">
                     <p className="text-[10px] font-black text-ink uppercase tracking-wide flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" /> BazaarX Response
+                      <MessageSquare className="w-3 h-3" /> Haatvia Response
                     </p>
                     <p className="text-[11px] text-ink-muted font-medium mt-1">{r.admin_reply}</p>
                   </div>
