@@ -1,8 +1,8 @@
-# Play Store listing (edit the name and wording per client)
+# Play Store listing for Haatvia
 
 | | |
 |---|---|
-| App name (max 30) | **My Store** |
+| App name (max 30) | **Haatvia** |
 | Short description (max 80) | Shop online and track your orders, all in one app. |
 | Category | Shopping |
 | Icon | `icon-512.png` |
@@ -10,7 +10,7 @@
 
 ## Full description (max 4000)
 
-Shop from My Store on your phone.
+Shop from Haatvia on your phone.
 
 - Browse categories, search, and see product photos, details and reviews.
 - Add to your cart and check out with the payment options the store offers.
