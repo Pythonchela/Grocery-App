@@ -6,44 +6,42 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
-use Database\Seeders\ShowcaseCatalogSeeder;
 use Database\Seeders\StarterCatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/** The sample catalogue that fills a fresh store: safe to run twice, never destructive. */
-class ShowcaseCatalogSeederTest extends TestCase
+/** The sample menu and pantry that fill a fresh food and grocery store: safe to run twice, never destructive. */
+class StarterCatalogSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function seedAll(): void
-    {
-        $this->seed(StarterCatalogSeeder::class);
-        $this->seed(ShowcaseCatalogSeeder::class);
-    }
-
     public function test_it_adds_restaurant_produce_and_grocery_categories_with_their_options(): void
     {
-        $this->seedAll();
+        $this->seed(StarterCatalogSeeder::class);
 
         $restaurant = Category::where('slug', 'restaurant')->first();
         $this->assertSame(['portion', 'add_ons', 'leave_out', 'spice_level'], array_column($restaurant->option_groups, 'key'));
+        $this->assertSame('Ingredients', $restaurant->spec_template[0]['labels'][0]);
 
-        $produce = Category::where('slug', 'fresh-produce')->first();
-        $this->assertSame('stepper', $produce->option_groups[0]['type']);
-
+        $this->assertSame('stepper', Category::where('slug', 'fresh-produce')->first()->option_groups[0]['type']);
         $this->assertNull(Category::where('slug', 'groceries')->first()->option_groups);
+    }
+
+    public function test_there_is_nothing_but_food(): void
+    {
+        $this->seed(StarterCatalogSeeder::class);
+
+        $this->assertSame(['fresh-produce', 'groceries', 'restaurant'], Category::orderBy('slug')->pluck('slug')->all());
+        $this->assertSame(['instant'], Category::pluck('delivery_profile')->unique()->values()->all());
     }
 
     public function test_every_sample_is_labelled_active_and_in_stock(): void
     {
-        $this->seedAll();
+        $this->seed(StarterCatalogSeeder::class);
 
-        $showcase = Product::where('slug', 'like', 'sample-%')
-            ->whereHas('variants', fn ($q) => $q->where('sku', 'like', 'SHOW-%'))->get();
-
-        $this->assertGreaterThanOrEqual(15, $showcase->count());
-        foreach ($showcase as $product) {
+        $products = Product::with('variants')->get();
+        $this->assertGreaterThanOrEqual(15, $products->count());
+        foreach ($products as $product) {
             $this->assertStringStartsWith('Sample: ', $product->title);
             $this->assertSame('ACTIVE', $product->status);
             $this->assertTrue($product->cod_available);
@@ -51,9 +49,18 @@ class ShowcaseCatalogSeederTest extends TestCase
         }
     }
 
+    public function test_food_carries_the_veg_mark_and_the_chicken_biryani_is_non_veg(): void
+    {
+        $this->seed(StarterCatalogSeeder::class);
+
+        $this->assertSame('non_veg', Product::where('slug', 'sample-chicken-biryani')->value('diet'));
+        $this->assertSame('veg', Product::where('slug', 'sample-paneer-butter-masala')->value('diet'));
+        $this->assertSame(0, Product::whereNull('diet')->count());
+    }
+
     public function test_a_dish_can_actually_be_priced_and_bought(): void
     {
-        $this->seedAll();
+        $this->seed(StarterCatalogSeeder::class);
         $pizza = Product::where('slug', 'sample-margherita-pizza')->with('variants', 'category')->first();
         $user = User::factory()->create(['role' => 'CUSTOMER', 'status' => 'ACTIVE']);
         $line = ['product_id' => $pizza->id, 'variant_id' => $pizza->variants->first()->id, 'quantity' => 1];
@@ -73,7 +80,7 @@ class ShowcaseCatalogSeederTest extends TestCase
 
     public function test_produce_is_priced_by_the_kilo(): void
     {
-        $this->seedAll();
+        $this->seed(StarterCatalogSeeder::class);
         $tomatoes = Product::where('slug', 'sample-tomatoes')->with('variants')->first();
 
         $this->postJson('/api/v1/cart/price', ['items' => [[
@@ -82,59 +89,28 @@ class ShowcaseCatalogSeederTest extends TestCase
         ]]])->assertJsonPath('data.items.0.unit_price', 100);
     }
 
-    public function test_the_kurta_has_swatches_and_sizes_with_their_own_stock(): void
-    {
-        $this->seedAll();
-        $kurta = Product::where('slug', 'sample-cotton-kurta')->with('variants')->first();
-
-        $this->assertSame(['Maroon', 'Navy', 'Olive'], $kurta->variants->pluck('color')->unique()->sort()->values()->all());
-        $this->assertSame('#1F3A93', $kurta->variants->firstWhere('color', 'Navy')->color_hex);
-    }
-
-    public function test_the_sold_out_starter_samples_become_buyable(): void
-    {
-        $this->seed(StarterCatalogSeeder::class);
-        $this->assertSame(0, ProductVariant::where('sku', 'like', 'SAMPLE-%')->sum('stock'));
-
-        $this->seed(ShowcaseCatalogSeeder::class);
-
-        $this->assertSame(0, ProductVariant::where('sku', 'like', 'SAMPLE-%')->where('stock', 0)->count());
-        $this->assertTrue((bool) Product::where('slug', 'sample-anarkali-set')->value('cod_available'));
-    }
-
     public function test_running_it_again_changes_nothing_and_never_undoes_a_real_stock_count(): void
     {
-        $this->seedAll();
-        $variant = ProductVariant::where('sku', 'SAMPLE-ANARKALI-SET-1')->first();
-        $variant->update(['stock' => 3]);   // staff counted real stock
-        Product::where('slug', 'sample-margherita-pizza')->update(['price' => 175]);   // and repriced a dish
+        $this->seed(StarterCatalogSeeder::class);
+        ProductVariant::where('sku', 'SAMPLE-BASMATI-RICE-1')->update(['stock' => 3]);   // staff counted real stock
+        Product::where('slug', 'sample-margherita-pizza')->update(['price' => 175]);      // and repriced a dish
         $products = Product::count();
         $variants = ProductVariant::count();
 
-        $this->seed(ShowcaseCatalogSeeder::class);
+        $this->seed(StarterCatalogSeeder::class);
 
         $this->assertSame($products, Product::count());
         $this->assertSame($variants, ProductVariant::count());
-        $this->assertSame(3, $variant->fresh()->stock);
+        $this->assertSame(3, (int) ProductVariant::where('sku', 'SAMPLE-BASMATI-RICE-1')->value('stock'));
         $this->assertEquals(175, Product::where('slug', 'sample-margherita-pizza')->value('price'));
     }
 
-    public function test_each_kind_of_item_gets_the_delivery_it_needs(): void
+    public function test_a_delivery_type_chosen_in_the_admin_is_never_overwritten(): void
     {
-        $this->seedAll();
-
-        $this->assertSame(['instant', 25], [Category::where('slug', 'restaurant')->value('delivery_profile'), Category::where('slug', 'restaurant')->value('prep_minutes')]);
-        $this->assertSame('instant', Category::where('slug', 'fresh-produce')->value('delivery_profile'));
-        $this->assertSame('parcel', Category::where('slug', 'ethnic-wear')->value('delivery_profile'));
-        $this->assertSame('parcel', Category::where('slug', 'electronics')->value('delivery_profile'));
-    }
-
-    public function test_a_profile_chosen_in_the_admin_is_never_overwritten(): void
-    {
-        $this->seedAll();
+        $this->seed(StarterCatalogSeeder::class);
         Category::where('slug', 'restaurant')->update(['delivery_profile' => 'parcel', 'prep_minutes' => 5]);
 
-        $this->seed(ShowcaseCatalogSeeder::class);
+        $this->seed(StarterCatalogSeeder::class);
 
         $this->assertSame('parcel', Category::where('slug', 'restaurant')->value('delivery_profile'));
         $this->assertSame(5, (int) Category::where('slug', 'restaurant')->value('prep_minutes'));

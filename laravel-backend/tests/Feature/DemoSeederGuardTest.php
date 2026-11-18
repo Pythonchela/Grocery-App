@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,5 +27,13 @@ class DemoSeederGuardTest extends TestCase
 
         $this->assertSame(0, User::where('email', 'admin@haatvia.test')->count());
         $this->assertSame(0, User::where('email', 'admin@example.com')->count());
+    }
+
+    public function test_the_demo_catalogue_is_this_apps_own_kind_of_item(): void
+    {
+        (new DatabaseSeeder)->run();
+
+        $this->assertGreaterThan(0, Product::count());
+        $this->assertSame(['instant'], Category::pluck('delivery_profile')->unique()->values()->all());
     }
 }

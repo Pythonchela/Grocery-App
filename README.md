@@ -1,4 +1,4 @@
-# Single-store app
+# Single-store app: Food & grocery
 
 A complete online store for **one business**: a customer website and app, and an
 admin panel for the owner. There are no vendors: nobody applies to sell, there are
@@ -66,7 +66,7 @@ cp .env.example .env          # then set APP_NAME to the store's name
 php artisan key:generate
 touch database/database.sqlite   # a file database is fine for trying it out
 php artisan migrate
-php artisan db:seed --class=StarterCatalogSeeder   # optional: ten sample products (zero stock)
+php artisan db:seed --class=StarterCatalogSeeder   # optional: a sample menu, produce and pantry (in stock)
 php artisan haatvia:admin     # creates the owner's login
 php artisan serve --port=8001
 
