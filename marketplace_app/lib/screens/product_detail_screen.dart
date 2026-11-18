@@ -10,6 +10,7 @@ import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../state/app_state.dart';
 import '../widgets/bundle_offer.dart';
+import '../widgets/diet_mark.dart';
 import '../widgets/option_picker.dart';
 import '../widgets/product_delivery_card.dart';
 import '../widgets/product_details_tabs.dart';
@@ -217,13 +218,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           fontWeight: DsWeight.bold,
                           color: c.ink)),
                 const SizedBox(height: 2),
-                Text(
-                  p.title,
-                  style: TextStyle(
-                    fontSize: DsText.md,
-                    height: DsText.mdHeight,
-                    color: c.inkMuted,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (DietMark.isKnown(p.diet))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, right: 8),
+                        child: DietMark(p.diet, size: 16),
+                      ),
+                    Expanded(
+                      child: Text(
+                        p.title,
+                        style: TextStyle(
+                          fontSize: DsText.md,
+                          height: DsText.mdHeight,
+                          color: c.inkMuted,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: DsSpace.s3),
                 Wrap(

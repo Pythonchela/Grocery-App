@@ -46,6 +46,7 @@ class ProductController extends Controller
         'hotspots' => 'nullable|array',
         'spin_images' => 'nullable|array',
         'cod_available' => 'nullable|boolean',
+        'diet' => 'nullable|in:veg,non_veg,egg',
         // Shoppertainment is opt-in per product. Nullable with no other rule
         // implying a requirement — a product is complete and sellable with
         // neither of these ever set.

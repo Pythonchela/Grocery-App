@@ -5,6 +5,7 @@ import '../design/components.dart';
 import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../state/app_state.dart';
+import 'diet_mark.dart';
 import 'product_add_control.dart';
 import 'wishlist_heart.dart';
 
@@ -104,16 +105,28 @@ class ProductCardTile extends StatelessWidget {
           SizedBox(
               height:
                   MediaQuery.textScalerOf(context).scale(DsText.xs) * 1.35 * 2,
-              child: Text(
-                product.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: DsText.xs,
-                  height: 1.35,
-                  fontWeight: DsWeight.semibold,
-                  color: c.ink,
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (DietMark.isKnown(product.diet))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 5),
+                      child: DietMark(product.diet, size: 12),
+                    ),
+                  Expanded(
+                    child: Text(
+                      product.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: DsText.xs,
+                        height: 1.35,
+                        fontWeight: DsWeight.semibold,
+                        color: c.ink,
+                      ),
+                    ),
+                  ),
+                ],
               )),
           const SizedBox(height: DsSpace.s1),
           // No stars until there is something to say; "★ — (0)" is noise.

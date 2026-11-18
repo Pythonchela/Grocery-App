@@ -4,6 +4,7 @@ import '../data/models.dart';
 import '../design/components.dart';
 import '../design/theme.dart';
 import '../design/tokens.g.dart';
+import 'diet_mark.dart';
 import 'product_add_control.dart';
 
 /// A product as a row, the way restaurant and grocery apps list them: picture
@@ -86,16 +87,28 @@ class ProductListRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: DsText.base,
-                      height: 1.3,
-                      fontWeight: DsWeight.bold,
-                      color: c.ink,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (DietMark.isKnown(product.diet))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 3, right: 6),
+                          child: DietMark(product.diet),
+                        ),
+                      Expanded(
+                        child: Text(
+                          product.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: DsText.base,
+                            height: 1.3,
+                            fontWeight: DsWeight.bold,
+                            color: c.ink,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   if (meta.isNotEmpty)
                     Padding(

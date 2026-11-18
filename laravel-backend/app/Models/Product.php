@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
     'rollover_image', 'authenticity_grade', 'local_store_available',
     'local_store_name', 'express_pincodes', 'hotspots',
     'spin_images', 'cod_available',
+    // 'veg' | 'non_veg' | 'egg' | null: the mark food shoppers look for.
+    'diet',
     // Shipping envelope. Drives carrier selection and what we get billed.
     'weight_grams', 'length_cm', 'width_cm', 'height_cm', 'requires_vehicle',
     // Optional Shoppertainment clip. A product is complete without either.

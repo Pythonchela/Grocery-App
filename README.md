@@ -15,6 +15,22 @@ taken out. It does not share code, a database or a server with the marketplace.
 └── packages/                 Design system: colours, brand names, shared components
 ```
 
+## Which kind of store this is
+
+The same code runs three kinds of store, and each copy of the project is set to one of
+them in a single file, `lib/storeKind.js` (`STORE_KIND`). It decides which fields the
+add-product page asks for, what blocks a product from going live, how a new category is
+delivered, and which sample items the starter seeder adds.
+
+| Kind | For | Delivered by | The add-product page asks for |
+|---|---|---|---|
+| `instant` | Food and grocery | A local rider, within hours | Veg / non-veg mark, pack size, minutes to get ready. No weight or parcel size. |
+| `parcel` | Shopping: clothes, shoes, electronics, beauty | A courier, in days | Sizes and colours, weight (suggested), parcel size. |
+| `heavy` | Furniture and appliances | A truck, booked for a slot | Packed weight and size (required), finish or size, vehicle needed. |
+
+Only `lib/storeKind.js` and the sample items in `laravel-backend/database/seeders/StarterCatalogSeeder.php`
+differ between the three. Everything else is the same code.
+
 ## What is in it
 
 **Shoppers** (website and app): browse and search, product pages with options,

@@ -6,6 +6,7 @@ import { apiFetch } from '../../lib/apiClient';
 import { Button } from '@ds/ui';
 import OptionGroupsEditor from './OptionGroupsEditor';
 import { DELIVERY_PROFILES } from '../../lib/productOptions';
+import { currentKind } from '../../lib/storeKind';
 import * as Icons from 'lucide-react';
 
 const ICON_OPTIONS = [
@@ -30,7 +31,8 @@ const EMPTY_FORM = {
   bannerUrl: '',
   sortOrder: '0',
   isFeatured: false,
-  deliveryProfile: '',
+  // A new category in this app is delivered the way this app delivers (food: rider, heavy: truck...).
+  deliveryProfile: currentKind.profile,
   prepMinutes: '',
 };
 
@@ -354,7 +356,7 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
                       className="w-full bg-surface-muted border border-line rounded-card px-3 py-3 font-semibold focus:outline-none focus:border-line-strong transition"
                     >
                       <option value="">Automatic</option>
-                      {DELIVERY_PROFILES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                      {DELIVERY_PROFILES.filter(d => d.value === currentKind.profile || d.value === form.deliveryProfile).map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                     </select>
                   </div>
                   <div>

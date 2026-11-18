@@ -226,6 +226,9 @@ class Product {
   final String? categoryName;
   final bool codAvailable;
 
+  /// 'veg', 'non_veg' or 'egg' for food; null for everything the mark does not apply to.
+  final String? diet;
+
   /// Custom selection options (portion, add-ons, ...) - this product's own, or
   /// its category's template. Empty for an ordinary product.
   final List<OptionGroup> optionGroups;
@@ -261,6 +264,7 @@ class Product {
     required this.variants,
     this.categoryName,
     this.codAvailable = true,
+    this.diet,
     this.optionGroups = const [],
     this.deliveryProfile,
     this.prepMinutes = 0,
@@ -317,6 +321,7 @@ class Product {
           .toList(),
       categoryName: category is Map ? _str(category['name']) : (category == null ? null : _str(category)),
       codAvailable: j['cod_available'] != false,
+      diet: ['veg', 'non_veg', 'egg'].contains(j['diet']) ? j['diet'] as String : null,
       optionGroups: OptionGroup.parseList(j['option_groups']),
       deliveryProfile: j['delivery_info'] is Map
           ? (j['delivery_info'] as Map)['profile'] as String?
