@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import OrdersClient, { STATUS_COLORS } from '../../components/admin/OrdersClient';
 import LiveBoardClient from '../../components/admin/LiveBoardClient';
 import SupportInboxClient from '../../components/admin/SupportInboxClient';
@@ -16,7 +17,6 @@ import {
   Eye, ChevronDown, Filter, X, Store, Shield, Lock, Mail, KeyRound,
   Menu, XCircle, BarChart3, Zap, Package2, Inbox, Truck, Flag, UploadCloud, ScrollText
 } from 'lucide-react';
-import ProductFormModal from '../../components/admin/ProductFormModal';
 import CategoryFormModal from '../../components/admin/CategoryFormModal';
 import ReviewsSection from '../../components/admin/ReviewsSection';
 import CouponsSection from '../../components/admin/CouponsSection';
@@ -172,8 +172,6 @@ function ProductsSection({ token }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [stockProduct, setStockProduct] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
@@ -200,18 +198,13 @@ function ProductsSection({ token }) {
   useEffect(() => { fetchCategories(); }, []);
   useEffect(() => { fetchProducts(); }, [filterCat, search]);
 
-  const handleSaved = (savedProduct, isEdit) => {
-    const mapped = mapProduct(savedProduct);
-    if (isEdit) {
-      setProducts(prev => prev.map(p => p.id === mapped.id ? mapped : p));
-      showToast('✅ Product updated in database successfully!');
-    } else {
-      setProducts(prev => [mapped, ...prev]);
-      showToast('✅ Product added to catalog!');
-    }
-    setModalOpen(false);
-    setEditingProduct(null);
-  };
+  // The editor page sends the admin back here with ?saved=... so the list can say what happened.
+  useEffect(() => {
+    const saved = new URLSearchParams(window.location.search).get('saved');
+    if (!saved) return;
+    showToast(saved === 'new' ? '✅ Product added to catalog!' : '✅ Product updated.');
+    window.history.replaceState(null, '', '/admin?section=products');
+  }, []);
 
   // Apply a saved stock change locally so the table updates without a refetch.
   const handleStockSaved = (productId, changes) => {
@@ -273,12 +266,12 @@ function ProductsSection({ token }) {
         <button onClick={fetchProducts} className="p-2.5 bg-surface border border-line rounded-card text-ink-muted hover:text-ink hover:border-line-strong transition">
           <RefreshCw className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => { setEditingProduct(null); setModalOpen(true); }}
+        <Link
+          href="/admin/products/new"
           className="flex items-center gap-2 bg-inverse text-ink-inverse px-4 py-2.5 rounded-card text-sm font-bold hover:bg-inverse transition"
         >
           <Plus className="w-4 h-4" /> Add Product
-        </button>
+        </Link>
       </div>
 
       {/* Stats row */}
@@ -312,16 +305,15 @@ function ProductsSection({ token }) {
                 <th className="text-right px-5 py-3.5 font-black text-ink-muted">Discount</th>
                 <th className="text-center px-5 py-3.5 font-black text-ink-muted">Stock</th>
                 <th className="text-center px-5 py-3.5 font-black text-ink-muted">Status</th>
-                <th className="text-center px-5 py-3.5 font-black text-ink-muted">Hotspots</th>
                 <th className="text-center px-5 py-3.5 font-black text-ink-muted">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={9} className="text-center py-10 text-ink-subtle font-bold">Loading from database...</td></tr>
+                <tr><td colSpan={8} className="text-center py-10 text-ink-subtle font-bold">Loading from database...</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={9} className="text-center py-10 text-ink-subtle font-bold">No products found. Add your first product.</td></tr>
+                <tr><td colSpan={8} className="text-center py-10 text-ink-subtle font-bold">No products found. Add your first product.</td></tr>
               )}
               {!loading && filtered.map((product, i) => (
                 <tr key={product.id} className="border-b border-line hover:bg-surface-muted transition group">
@@ -355,18 +347,19 @@ function ProductsSection({ token }) {
                     <span className={`px-2.5 py-1 rounded-pill font-bold ${product.inStock ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger'}`}>
                       {product.inStock ? 'In Stock' : 'Out of Stock'}
                     </span>
+                    {product.status === 'DRAFT' && <span className="ml-1.5 bg-surface-sunken text-ink-muted px-2 py-0.5 rounded-pill font-bold border border-line">Draft</span>}
                     {product.isNew && <span className="ml-1.5 bg-warning-soft text-warning px-2 py-0.5 rounded-pill font-bold border border-warning">NEW</span>}
                   </td>
-                  <td className="px-5 py-3.5 text-center font-bold text-ink-muted">{product.hotspots?.length || 0}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => { setEditingProduct(product); setModalOpen(true); }}
+                      <Link
+                        href={`/admin/products/${product.id}`}
                         className="p-2 bg-accent-soft text-accent hover:bg-accent-soft rounded-control transition"
                         title="Edit Product"
+                        aria-label={`Edit ${product.title}`}
                       >
                         <Pencil className="w-3.5 h-3.5" />
-                      </button>
+                      </Link>
                       <button
                         onClick={() => setDeleteId(product.id)}
                         className="p-2 bg-danger-soft text-danger hover:bg-danger-soft rounded-control transition"
@@ -401,15 +394,6 @@ function ProductsSection({ token }) {
           </div>
         </div>
       )}
-
-      <ProductFormModal
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditingProduct(null); }}
-        product={editingProduct}
-        categories={categories}
-        onSaved={handleSaved}
-        token={token}
-      />
 
       {stockProduct && (
         <InventoryModal
@@ -735,9 +719,21 @@ function OverviewSection({ onNavigate, token }) {
 // MAIN ADMIN APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AdminPage() {
+  // useSearchParams needs a Suspense boundary above it (Next renders this part on the client).
+  return (
+    <Suspense fallback={null}>
+      <AdminShell />
+    </Suspense>
+  );
+}
+
+function AdminShell() {
   // Session lives in app/admin/layout.js so every /admin/* route is gated.
   const { token: adminToken, user: adminUser, logout: handleLogout } = useAdminAuth();
-  const [section, setSection] = useState('overview');
+  // The product editor page links back with ?section=products. window.location is not updated yet
+  // while a client-side navigation is still rendering, so the router's own copy is read instead.
+  const initialSection = useSearchParams().get('section');
+  const [section, setSection] = useState(initialSection || 'overview');
   const [collapsed, setCollapsed] = useState(false);
 
   const renderSection = () => {
