@@ -2,214 +2,142 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Star, ShoppingBag, Tag, MapPin, Award, Leaf, Cpu, Zap, Sparkles, Scale, Heart } from 'lucide-react';
-import { Button, Card } from '@ds/ui';
+import { Clock, Heart, Minus, Plus } from 'lucide-react';
 import { useStore } from './providers/StoreProvider';
 import { apiFetch } from '../lib/apiClient';
+import { hasRequiredOptions } from '../lib/productOptions';
+import DietMark from './DietMark';
 
-export default function ProductCard({
-  product,
-  onAddToCart,
-  onQuickView,
-  onToggleCompare,
-  isCompared
-}) {
-  const [selectedStore, setSelectedStore] = useState(true);
-  const { authToken, handleAddToCart } = useStore();
-  const router = useRouter();
+/** "500 g": the pack size, when the product has exactly one and it says something. */
+export function unitOf(product) {
+  const variants = product.variants || [];
+  if (variants.length === 1) {
+    const size = (variants[0].size || '').trim();
+    return size && !/^(standard|free size)$/i.test(size) ? size : null;
+  }
+  return variants.length > 1 ? `${variants.length} options` : null;
+}
 
-  // Cards are rendered from places that pass no handler (e.g. "Related
-  // products"). Falling back to the store's own keeps the button working there
-  // instead of throwing on click and doing nothing.
+/**
+ * The tile every list in the food and grocery store shares. A square picture with the ADD button
+ * sitting on its lower corner (so adding is one tap, without opening the product), then how soon it
+ * is ready, the name, the pack size and the price. It turns into "- 2 +" once it is in the basket.
+ */
+export default function ProductCard({ product, onAddToCart }) {
+  const { authToken, handleAddToCart, handleUpdateQty, cartItems } = useStore();
+  const [wishlisted, setWishlisted] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // Cards are rendered from places that pass no handler (e.g. "Related products").
   const addToCart = onAddToCart || handleAddToCart;
   const inStock = product.inStock !== false;
   const variants = product.variants || [];
-  // More than one option means the shopper has to pick (size, colour); adding
-  // the product with no variant would put an arbitrary one in the cart.
-  const needsChoice = variants.length > 1;
+  // A choice the shopper must make (pack size, portion) is made on the product page: adding the
+  // product with no choice would put an arbitrary one in the basket.
+  const needsChoice = variants.length > 1 || hasRequiredOptions(product.optionGroups || []);
 
-  const handleAdd = () => {
-    if (!inStock) return;
-    if (needsChoice) {
-      router.push(`/product/${product.id}`);
-      return;
-    }
-    addToCart(product, variants[0] || null);
-  };
-  const [wishlisted, setWishlisted] = useState(false);
-  const [wishlistBusy, setWishlistBusy] = useState(false);
+  const lines = cartItems.filter((i) => i.id === product.id);
+  const inCart = lines.reduce((n, i) => n + i.quantity, 0);
+  const last = lines[lines.length - 1];
+  const unit = unitOf(product);
+  const ready = Number(product.deliveryInfo?.prep_minutes) || Number(product.prepMinutes) || 0;
+  const href = `/product/${product.id}`;
 
   const toggleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!authToken) { window.location.href = '/account/wishlist'; return; }
-    setWishlistBusy(true);
+    setBusy(true);
     try {
-      await apiFetch('/wishlist-items', {
-        method: 'POST', token: authToken, body: { product_id: product.id },
-      });
+      await apiFetch('/wishlist-items', { method: 'POST', token: authToken, body: { product_id: product.id } });
       setWishlisted(true);
     } finally {
-      setWishlistBusy(false);
+      setBusy(false);
     }
   };
 
-  const renderBadgeIcon = (badgeName) => {
-    if (badgeName.includes('Heritage') || badgeName.includes('GI')) return <Award className="w-3 h-3 text-warning" />;
-    if (badgeName.includes('Organic') || badgeName.includes('Ayush') || badgeName.includes('Paraben')) return <Leaf className="w-3 h-3 text-success" />;
-    if (badgeName.includes('ANC') || badgeName.includes('Battery') || badgeName.includes('Voice')) return <Cpu className="w-3 h-3 text-accent" />;
-    if (badgeName.includes('Rebound') || badgeName.includes('Ortho') || badgeName.includes('Marathon')) return <Zap className="w-3 h-3 text-accent" />;
-    return <Sparkles className="w-3 h-3 text-danger" />;
+  const add = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (needsChoice) { window.location.assign(href); return; }
+    addToCart(product, variants[0] || null);
   };
 
   return (
-    <Card
-      interactive
-      padded={false}
-      className="group overflow-hidden flex flex-col justify-between h-full relative p-4 space-y-3"
-    >
-      
-      {/* Top Badge Strip (Green NEW & Red SALE Tags + Compare Checkbox) */}
-      <div className="flex items-center justify-between z-10">
-        <div className="flex items-center gap-1.5">
-          {product.isNew && (
-            <span className="bg-success text-ink-inverse text-[10px] font-black px-2.5 py-0.5 rounded-pill uppercase tracking-wider shadow-subtle">
-              NEW
-            </span>
-          )}
-          <span className="bg-danger text-ink-inverse text-[10px] font-black px-2.5 py-0.5 rounded-pill uppercase tracking-wider shadow-subtle flex items-center gap-1">
-            <Tag className="w-3 h-3" /> {product.discount}% OFF
+    <div className="group relative flex h-full flex-col rounded-card border border-line bg-surface p-2.5">
+      <div className="relative">
+        <Link href={href} className="block aspect-square overflow-hidden rounded-control bg-surface-sunken">
+          <img src={product.image} alt={product.title} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+        </Link>
+
+        {product.discount > 0 && inStock && (
+          <span className="absolute left-0 top-0 rounded-br-chip rounded-tl-control bg-accent px-1.5 py-0.5 text-2xs font-black text-on-accent">
+            {product.discount}% OFF
           </span>
-        </div>
-
-        {/* Compare Select Trigger */}
-        {onToggleCompare && (
-          <button
-            onClick={() => onToggleCompare(product)}
-            className={`text-[10px] font-black px-2.5 py-0.5 rounded-pill border transition flex items-center gap-1 ${
-              isCompared
-                ? 'bg-inverse text-ink-inverse border-line-strong'
-                : 'bg-surface-sunken text-ink-muted hover:bg-surface-sunken border-line'
-            }`}
-          >
-            <Scale className="w-3 h-3" />
-            <span>{isCompared ? 'Comparing' : '+ Compare'}</span>
-          </button>
         )}
-      </div>
+        {!inStock && (
+          <span className="absolute inset-0 flex items-center justify-center rounded-control bg-surface/60 text-xs font-black text-ink">Sold out</span>
+        )}
 
-      {/* Product Image */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-card bg-surface-muted border border-line">
-        <img
-          src={product.image}
-          alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-          loading="lazy"
-        />
-
-        {/* Wishlist heart */}
         <button
+          type="button"
           onClick={toggleWishlist}
-          disabled={wishlistBusy}
-          title={wishlisted ? 'Saved to wishlist' : 'Add to wishlist'}
-          className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-pill flex items-center justify-center shadow-subtle transition disabled:opacity-50 ${
+          disabled={busy}
+          aria-label={wishlisted ? 'Saved to wishlist' : 'Add to wishlist'}
+          className={`absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-pill shadow-subtle transition disabled:opacity-50 ${
             wishlisted ? 'bg-danger text-ink-inverse' : 'bg-surface/90 text-ink-muted hover:text-danger'
           }`}
         >
-          <Heart className={`w-4 h-4 ${wishlisted ? 'fill-ink-inverse' : ''}`} />
+          <Heart className={`h-3.5 w-3.5 ${wishlisted ? 'fill-current' : ''}`} />
         </button>
 
-        {/* Quick Specs Overlay */}
-        <div className="absolute inset-0 bg-inverse/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center p-3">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onQuickView(product)}
-            className="shadow-card"
-          >
-            Quick Specs
-          </Button>
-        </div>
-      </div>
-
-      {/* Content Details */}
-      <div className="space-y-2 flex-1 flex flex-col justify-between">
-        <div>
-          {/* Marketplace Badges */}
-          <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-            {product.lifestyleBadges.map((badge, i) => (
-              <span key={i} className="text-[10px] font-extrabold text-ink bg-surface-sunken border border-line px-2 py-0.5 rounded-pill flex items-center gap-1">
-                {renderBadgeIcon(badge)}
-                <span>{badge}</span>
-              </span>
-            ))}
-          </div>
-
-          <Link href={`/product/${product.id}`} className="group-hover:text-ink transition">
-            <h3 className="font-extrabold text-sm text-ink line-clamp-2 leading-snug">
-              {product.title}
-            </h3>
-          </Link>
-
-          {/* Star Rating & Review Count */}
-          <div className="flex items-center gap-2 mt-1.5">
-            <div className="flex items-center gap-1 text-xs font-black text-ink">
-              <Star className="w-3.5 h-3.5 fill-rating text-warning" />
-              <span>{product.rating}</span>
-            </div>
-            <span className="text-xs text-ink-subtle font-semibold">({product.reviewsCount} reviews)</span>
-          </div>
-
-          {/* Radio Button for Local Store Availability */}
-          <div className="mt-2.5 pt-2 border-t border-line flex items-center gap-2">
-            <input
-              type="radio"
-              id={`store-${product.id}`}
-              checked={selectedStore}
-              onChange={() => setSelectedStore(!selectedStore)}
-              className="accent-primary w-3.5 h-3.5 cursor-pointer"
-            />
-            <label htmlFor={`store-${product.id}`} className="text-[11px] font-bold text-ink-muted cursor-pointer flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-success shrink-0" />
-              <span className="truncate">{product.localStoreName}</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Pricing & Pill Buttons */}
-        <div className="pt-2 border-t border-line space-y-2.5">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-black text-ink">₹{product.price.toLocaleString('en-IN')}</span>
-            <span className="text-xs text-ink-subtle line-through font-semibold">MRP ₹{product.mrp.toLocaleString('en-IN')}</span>
-          </div>
-
-          {/* Specified Pill Buttons: Dark Primary (Add to cart) & White Secondary (Buy now) */}
-          {!inStock ? (
-            <Button size="xs" disabled className="w-full">
-              Out of stock
-            </Button>
-          ) : needsChoice ? (
-            <Button size="xs" onClick={handleAdd} className="w-full">
-              Choose options
-            </Button>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                size="xs"
-                onClick={handleAdd}
-                leadingIcon={<ShoppingBag className="w-3.5 h-3.5" />}
+        {inStock && (
+          <div className="absolute -bottom-4 right-1.5">
+            {inCart === 0 ? (
+              <button
+                type="button"
+                onClick={add}
+                className="rounded-control border border-accent bg-surface px-5 py-1.5 text-sm font-black text-accent shadow-card transition hover:bg-accent-soft"
               >
-                Add to cart
-              </Button>
-
-              <Button variant="secondary" size="xs" onClick={handleAdd}>
-                Buy now
-              </Button>
-            </div>
-          )}
-        </div>
+                ADD
+                {needsChoice && <span className="block text-2xs font-semibold leading-none text-ink-subtle">options</span>}
+              </button>
+            ) : (
+              <div className="flex items-center overflow-hidden rounded-control bg-accent text-on-accent shadow-card">
+                <button type="button" aria-label="Remove one" onClick={(e) => { e.preventDefault(); handleUpdateQty(last.cartItemId, last.quantity - 1); }} className="p-2 hover:bg-accent-hover">
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+                <span className="min-w-6 text-center text-sm font-black">{inCart}</span>
+                <button
+                  type="button"
+                  aria-label="Add one more"
+                  onClick={(e) => { e.preventDefault(); if (needsChoice) window.location.assign(href); else handleUpdateQty(last.cartItemId, last.quantity + 1); }}
+                  className="p-2 hover:bg-accent-hover"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </Card>
+
+      <div className="mt-6 flex flex-1 flex-col">
+        {ready > 0 && (
+          <p className="mb-0.5 flex items-center gap-1 text-2xs font-black uppercase tracking-wide text-ink-subtle">
+            <Clock className="h-3 w-3" /> {ready} min
+          </p>
+        )}
+        <Link href={href} className="flex items-start gap-1.5 text-sm font-semibold leading-snug text-ink">
+          <DietMark diet={product.diet} size="sm" />
+          <span className="line-clamp-2">{product.title}</span>
+        </Link>
+        {unit && <p className="mt-0.5 text-xs font-medium text-ink-subtle">{unit}</p>}
+        <p className="mt-auto flex items-baseline gap-1.5 pt-2">
+          <span className="text-base font-black text-ink">₹{product.price.toLocaleString('en-IN')}</span>
+          {product.mrp > product.price && <span className="text-xs font-medium text-ink-subtle line-through">₹{product.mrp.toLocaleString('en-IN')}</span>}
+        </p>
+      </div>
+    </div>
   );
 }

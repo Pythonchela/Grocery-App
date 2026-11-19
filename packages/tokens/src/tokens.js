@@ -49,6 +49,9 @@ const palette = {
   },
 
   blue:  { soft: '#E8F0FE', 500: '#1A56FF', 600: '#1444CC', dark: '#1E293B' },
+  // The food and grocery app's own colours: fresh green for actions, warm yellow for highlights.
+  fresh: { soft: '#E8F5E9', 500: '#0C831F', 600: '#0A6B19', dark: '#0F2A17' },
+  sun:   { 400: '#F8CB46', 500: '#E7B82D' },
   neon:  { 500: '#00E699', 600: '#00C984', surface: '#05080E' },
   lime:  { 400: '#C8FF00', 500: '#A6D600' },
   green: { soft: '#E6F4EA', 500: '#16A34A', 600: '#15803D', 700: '#2E7D32', dark: '#0F2A17' },
@@ -82,15 +85,15 @@ const color = {
   'primary-hover':   [palette.neutral[800], palette.white],
   'on-primary':      [palette.white,        palette.neutral[900]],
 
-  // Brand — accent is the action/link blue
-  'accent':          [palette.blue[500],    '#5B8BFF'],
-  'accent-hover':    [palette.blue[600],    '#7BA3FF'],
-  'accent-soft':     [palette.blue.soft,    palette.blue.dark],
+  // Brand — accent is the action colour: fresh green in the food and grocery app
+  'accent':          [palette.fresh[500],   '#3DBE5A'],
+  'accent-hover':    [palette.fresh[600],   '#63D07C'],
+  'accent-soft':     [palette.fresh.soft,   palette.fresh.dark],
   'on-accent':       [palette.white,        palette.neutral[950]],
 
-  // Brand — highlight is the lime used for compare bars and special badges
-  'highlight':       [palette.lime[400],    palette.lime[400]],
-  'highlight-hover': [palette.lime[500],    palette.lime[500]],
+  // Brand — highlight is the warm yellow used for the main call to action and special badges
+  'highlight':       [palette.sun[400],     palette.sun[400]],
+  'highlight-hover': [palette.sun[500],     palette.sun[500]],
   'on-highlight':    [palette.neutral[950], palette.neutral[950]],
 
   // Status

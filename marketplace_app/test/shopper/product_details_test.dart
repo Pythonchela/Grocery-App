@@ -298,7 +298,7 @@ void main() {
       expect(find.text('Snitch'), findsWidgets);
       expect(find.text('Men Slim Fit Solid Shirt'), findsOneWidget);
       expect(find.text('Add to cart'), findsOneWidget);
-      expect(find.textContaining('Buy at ₹'), findsOneWidget);
+      expect(find.text('Inclusive of all taxes'), findsWidgets);
       expect(find.byType(ProductAssurances), findsOneWidget);
       expect(find.text('7-day return'), findsOneWidget);
       expect(find.text('Delivery details'), findsOneWidget);
@@ -330,7 +330,7 @@ void main() {
       // Navy is first and in stock, so it is selected, with its own single photo.
       expect(shown(), ['https://example.com/navy1.jpg']);
 
-      await tester.tap(find.bySemanticsLabel('Olive'));
+      await tester.tap(find.text('Olive · M'));
       await tester.pump();
       expect(shown(), hasLength(3), reason: 'a colour with no photos of its own keeps the gallery');
     });
@@ -381,10 +381,10 @@ void main() {
       expect(find.text('Free delivery above ₹1,999'), findsNothing);
     });
 
-    testWidgets('Buy at shows the price with the shopper\'s choices on it', (tester) async {
+    testWidgets('the bar under the page shows the price with the shopper\'s choices on it', (tester) async {
       await open(tester, {'price': 999});
 
-      expect(find.text('Buy at ₹999'), findsOneWidget);
+      expect(find.text('₹999'), findsWidgets);
     });
   });
 }

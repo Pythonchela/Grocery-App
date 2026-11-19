@@ -160,14 +160,18 @@ class _CategoryScreenState extends State<CategoryScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_siblings.length > 1)
-            CategoryStrip(
+            _CategoryRail(
               categories: Category.withCoverPhotos(_siblings, _products),
               selectedSlug: _category.slug,
               onSelected: _switchTo,
             ),
+          Expanded(
+            child: Column(
+        children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: DsSpace.s3),
             child: BxTabs(
@@ -250,7 +254,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                             color: c.accent,
                             child: GridView.builder(
                               padding: const EdgeInsets.all(DsSpace.s4),
-                              gridDelegate: productGridDelegate(context),
+                              gridDelegate: productGridDelegate(context, reserved: _siblings.length > 1 ? _CategoryRail.width : 0),
                               itemCount: _products.length,
                               itemBuilder: (context, i) => ProductCardTile(
                                 product: _products[i],
@@ -265,6 +269,68 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           ),
           ),
         ],
+      ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The aisles down the left edge: tap one to switch category without leaving the page.
+class _CategoryRail extends StatelessWidget {
+  static const width = 84.0;
+
+  final List<Category> categories;
+  final String selectedSlug;
+  final ValueChanged<Category> onSelected;
+
+  const _CategoryRail({required this.categories, required this.selectedSlug, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ds;
+    return Container(
+      width: width,
+      decoration: BoxDecoration(color: c.surface, border: Border(right: BorderSide(color: c.line))),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: DsSpace.s2),
+        itemCount: categories.length,
+        itemBuilder: (context, i) {
+          final category = categories[i];
+          final on = category.slug == selectedSlug;
+          return Semantics(
+            button: true,
+            selected: on,
+            label: category.name,
+            child: InkWell(
+              key: ValueKey('strip-${category.slug}'),
+              onTap: () => onSelected(category),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: DsSpace.s3, horizontal: DsSpace.s1),
+                decoration: BoxDecoration(
+                  color: on ? c.accentSoft : null,
+                  border: Border(left: BorderSide(color: on ? c.accent : Colors.transparent, width: 4)),
+                ),
+                child: Column(
+                  children: [
+                    CategoryThumb(category: category, size: 48),
+                    const SizedBox(height: DsSpace.s1),
+                    Text(category.name,
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: DsText.x2xs,
+                            height: 1.2,
+                            fontWeight: on ? DsWeight.black : DsWeight.semibold,
+                            color: on ? c.accent : c.inkMuted)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

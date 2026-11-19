@@ -9,10 +9,9 @@ import '../design/components.dart';
 import '../design/theme.dart';
 import '../design/tokens.g.dart';
 import '../state/app_state.dart';
-import '../widgets/product_list_row.dart';
-import '../widgets/product_rail.dart';
 import '../widgets/category_shortcuts.dart';
 import '../widgets/home_sections.dart';
+import '../widgets/quick_home.dart';
 import 'category_screen.dart';
 import 'product_detail_screen.dart';
 import 'notifications_screen.dart';
@@ -33,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> _forYou = [];
   HomeLayout _layout = HomeLayout.plan(const []);
   bool _hasReels = false;
+  bool _vegOnly = false;
+  bool _offersOnly = false;
   bool _loading = true;
   String? _error;
 
@@ -144,41 +145,46 @@ class _HomeScreenState extends State<HomeScreen> {
           child: CustomScrollView(
             slivers: [
               SliverAppBar(
-                floating: true,
+                pinned: true,
+                backgroundColor: c.accentSoft,
+                surfaceTintColor: Colors.transparent,
+                toolbarHeight: 64,
                 titleSpacing: DsSpace.s4,
                 title: Row(
                   children: [
-                    BrandMark(logoUrl: AppState.instance.logoUrl),
-                    const SizedBox(width: DsSpace.s2),
-                    Flexible(
-                        child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  const TextSpan(text: DsBrand.nameDisplay),
-                                  TextSpan(
-                                      text: DsBrand.nameAccent,
-                                      style: TextStyle(color: c.accent)),
-                                ],
-                              ),
-                              style: TextStyle(
-                                fontFamily: DsFont.display,
-                                fontSize: DsText.lg,
-                                fontWeight: DsWeight.black,
-                                color: c.ink,
-                              ),
-                            ))),
+                    BrandMark(logoUrl: AppState.instance.logoUrl, size: 36),
+                    const SizedBox(width: DsSpace.s3),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            readyRange([..._featured, ..._trending]) == null
+                                ? DsBrand.name
+                                : 'Ready in ${readyRange([..._featured, ..._trending])}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: DsFont.display,
+                              fontSize: DsText.xl,
+                              height: 1.15,
+                              fontWeight: DsWeight.black,
+                              color: c.ink,
+                            ),
+                          ),
+                          Text(
+                            'Delivered fresh by ${DsBrand.name}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: DsText.xs, color: c.inkMuted),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.search),
-                    tooltip: 'Search',
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SearchScreen()),
-                    ),
-                  ),
                   // Order and delivery news live behind the bell; the dot says
                   // there is something unread.
                   AnimatedBuilder(
@@ -188,8 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? 'Notifications (${AppState.instance.unreadNotifications} unread)'
                           : 'Notifications',
                       icon: Badge(
-                        isLabelVisible:
-                            AppState.instance.unreadNotifications > 0,
+                        isLabelVisible: AppState.instance.unreadNotifications > 0,
                         smallSize: 8,
                         backgroundColor: c.danger,
                         child: const Icon(Icons.notifications_none),
@@ -203,6 +208,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: DsSpace.s2),
                 ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(64),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(DsSpace.s4, 0, DsSpace.s4, DsSpace.s3),
+                    child: QuickSearchBar(
+                      hint: _featured.isEmpty ? 'Search for products' : 'Search "${_featured.first.title.replaceFirst('Sample: ', '')}"',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               if (_error != null)
                 SliverToBoxAdapter(
@@ -230,12 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SliverToBoxAdapter(
                       child: SizedBox(height: DsSpace.s10)),
               ] else ...[
-                SliverToBoxAdapter(
-                    child: _Hero(
-                        imageUrl:
-                            _featured.isEmpty ? null : _featured.first.image,
-                        onShopNow:
-                            _categories.isEmpty ? null : _openCategoryList)),
                 if (_loading)
                   const SliverToBoxAdapter(child: _HomeSkeleton())
                 else
@@ -251,50 +262,62 @@ class _HomeScreenState extends State<HomeScreen> {
   /// The app's own categories and product lists: the whole home page when the
   /// admin has no layout, and what follows a layout that shows no products.
   List<Widget> _catalogueSlivers({required bool withReels}) {
+    bool keep(Product p) =>
+        !(_vegOnly && (p.diet == 'non_veg' || p.diet == 'egg')) && !(_offersOnly && p.discount <= 0);
+
+    final popular = _trending.where(keep).toList();
+    final forYou = _forYou.where(keep).toList();
+    final shown = _featured.where(keep).toList();
+    final byCategory = <Category, List<Product>>{
+      for (final category in _categories)
+        category: shown.where((p) => p.categoryName == category.name).toList(),
+    };
+    void open(Category category) => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => CategoryScreen(category: category, siblings: _categories)));
+
     return [
-      const SliverToBoxAdapter(child: SizedBox(height: DsSpace.s4)),
       SliverToBoxAdapter(
-          child: CategoryShortcuts(
-              scrollable: true,
-              categories: _categories,
-              onSelected: (category) => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => CategoryScreen(
-                          category: category, siblings: _categories))))),
-      if (_trending.isNotEmpty) ...[
-        const _SectionHeader(
-          title: 'Trending now',
+        child: QuickToolbar(
+          vegOnly: _vegOnly,
+          offersOnly: _offersOnly,
+          onVeg: (v) => setState(() => _vegOnly = v),
+          onOffers: (v) => setState(() => _offersOnly = v),
         ),
-        SliverToBoxAdapter(
-          child: ProductRail(products: _trending, onTap: _openProduct),
-        ),
-      ],
+      ),
+      SliverToBoxAdapter(child: QuickCategoryGrid(categories: _categories, onSelected: open)),
+      SliverToBoxAdapter(child: QuickSection(title: 'Popular right now', products: popular, onTap: _openProduct)),
       if (withReels && _hasReels)
         SliverToBoxAdapter(
           child: ReelsPromo(
-            section:
-                const HomeSection(id: 'reels', type: HomeSectionType.reels),
+            section: const HomeSection(id: 'reels', type: HomeSectionType.reels),
             onOpen: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ReelsScreen()),
             ),
           ),
         ),
-      if (_forYou.isNotEmpty) ...[
-        const _SectionHeader(
-          title: 'Recommended for you',
-        ),
+      SliverToBoxAdapter(child: QuickSection(title: 'Picked for you', products: forYou, onTap: _openProduct)),
+      for (final entry in byCategory.entries)
         SliverToBoxAdapter(
-          child: ProductRail(products: _forYou, onTap: _openProduct),
+          child: QuickSection(
+            title: entry.key.name,
+            products: entry.value.take(10).toList(),
+            onTap: _openProduct,
+            onSeeAll: () => open(entry.key),
+          ),
         ),
-      ],
-      _AllItems(
-        products: _featured,
-        onOpen: _openProduct,
-      ),
+      if (!_loading && _error == null && popular.isEmpty && shown.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(DsSpace.s8),
+            child: Center(
+              child: Text('Nothing matches those filters right now.',
+                  style: TextStyle(fontSize: DsText.sm, color: context.ds.inkMuted)),
+            ),
+          ),
+        ),
       const SliverToBoxAdapter(child: SizedBox(height: DsSpace.s10)),
     ];
   }
-
   /// The home page as the admin laid it out, section by section.
   List<Widget> _sectionSlivers() {
     final slivers = <Widget>[];
@@ -389,283 +412,6 @@ class _HomeScreenState extends State<HomeScreen> {
     };
   }
 
-  void _openCategoryList() {
-    if (_categories.isEmpty) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => Scaffold(
-                appBar: AppBar(title: const Text('Shop by category')),
-                body: SingleChildScrollView(
-                    child: CategoryShortcuts(
-                  categories: _categories,
-                  onSelected: (category) => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => CategoryScreen(
-                              category: category, siblings: _categories))),
-                )),
-              )),
-    );
-  }
-}
-
-class _Hero extends StatelessWidget {
-  final String? imageUrl;
-  final VoidCallback? onShopNow;
-
-  const _Hero({required this.imageUrl, required this.onShopNow});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.ds;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(DsSpace.s4, DsSpace.s2, DsSpace.s4, 0),
-      child: ClipRRect(
-        borderRadius: DsRadius.cardAll,
-        child: LayoutBuilder(builder: (context, box) {
-          // The text decides the banner's height (it grows with the system
-          // font); the picture fills whatever that turns out to be.
-          final textWidth =
-              imageUrl == null ? box.maxWidth : box.maxWidth * 0.58;
-          return Container(
-            constraints: const BoxConstraints(minHeight: 150),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [c.accent, c.accentHover],
-              ),
-            ),
-            child: Stack(
-              children: [
-                if (imageUrl != null)
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
-                    right: 0,
-                    width: box.maxWidth - textWidth,
-                    child: Image.network(
-                      imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
-                  ),
-                SizedBox(
-                  width: textWidth,
-                  child: Padding(
-                    padding: const EdgeInsets.all(DsSpace.s4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'NEW ARRIVALS',
-                          style: TextStyle(
-                            fontSize: DsText.x2xs,
-                            letterSpacing: 1,
-                            fontWeight: DsWeight.semibold,
-                            color: c.onAccent.withValues(alpha: 0.85),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Festive season sale',
-                          style: TextStyle(
-                            fontFamily: DsFont.display,
-                            fontSize: DsText.lg,
-                            height: 1.2,
-                            fontWeight: DsWeight.bold,
-                            color: c.onAccent,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Up to 60% off',
-                          style: TextStyle(
-                            fontSize: DsText.xs,
-                            color: c.onAccent.withValues(alpha: 0.9),
-                          ),
-                        ),
-                        const SizedBox(height: DsSpace.s3),
-                        Material(
-                          color: c.onAccent,
-                          borderRadius: DsRadius.controlAll,
-                          child: InkWell(
-                            borderRadius: DsRadius.controlAll,
-                            onTap: onShopNow,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: DsSpace.s4, vertical: DsSpace.s2),
-                              child: Text(
-                                'Shop now',
-                                style: TextStyle(
-                                  fontSize: DsText.xs,
-                                  fontWeight: DsWeight.bold,
-                                  color: c.accent,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.ds;
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-            DsSpace.s4, DsSpace.s5, DsSpace.s4, DsSpace.s3),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontFamily: DsFont.display,
-            fontSize: DsText.md,
-            fontWeight: DsWeight.bold,
-            color: c.ink,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// What the item list can be narrowed to - the quick filters restaurant and
-/// grocery apps put above a long list.
-enum _Quick { all, offers, top, isNew, under500 }
-
-extension on _Quick {
-  String get label => switch (this) {
-        _Quick.all => 'All',
-        _Quick.offers => 'Offers',
-        _Quick.top => 'Top rated',
-        _Quick.isNew => 'New',
-        _Quick.under500 => 'Under ₹500',
-      };
-
-  bool matches(Product p) => switch (this) {
-        _Quick.all => true,
-        _Quick.offers => p.discount > 0,
-        _Quick.top => p.rating >= 4,
-        _Quick.isNew => p.isNew,
-        _Quick.under500 => p.price <= 500,
-      };
-}
-
-/// Every item as a detailed row, under quick filters.
-class _AllItems extends StatefulWidget {
-  final List<Product> products;
-  final void Function(Product) onOpen;
-
-  const _AllItems({required this.products, required this.onOpen});
-
-  @override
-  State<_AllItems> createState() => _AllItemsState();
-}
-
-class _AllItemsState extends State<_AllItems> {
-  _Quick _quick = _Quick.all;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.ds;
-    final shown = widget.products.where(_quick.matches).toList();
-
-    return SliverMainAxisGroup(slivers: [
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-              DsSpace.s4, DsSpace.s5, DsSpace.s4, DsSpace.s2),
-          child: Text(
-            'All items',
-            style: TextStyle(
-              fontFamily: DsFont.display,
-              fontSize: DsText.md,
-              fontWeight: DsWeight.bold,
-              color: c.ink,
-            ),
-          ),
-        ),
-      ),
-      SliverToBoxAdapter(
-        child: SizedBox(
-          height: 44,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: DsSpace.s4),
-            itemCount: _Quick.values.length,
-            separatorBuilder: (_, __) => const SizedBox(width: DsSpace.s2),
-            itemBuilder: (context, i) {
-              final q = _Quick.values[i];
-              final selected = q == _quick;
-              return Center(
-                child: Material(
-                  color: selected ? c.primary : c.surface,
-                  borderRadius: DsRadius.controlAll,
-                  child: InkWell(
-                    borderRadius: DsRadius.controlAll,
-                    onTap: () => setState(() => _quick = q),
-                    child: Container(
-                      height: 34,
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        borderRadius: DsRadius.controlAll,
-                        border:
-                            Border.all(color: selected ? c.primary : c.line),
-                      ),
-                      child: Text(q.label,
-                          style: TextStyle(
-                            fontSize: DsText.sm,
-                            fontWeight: DsWeight.semibold,
-                            color: selected ? c.onPrimary : c.inkMuted,
-                          )),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-      if (shown.isEmpty)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(DsSpace.s8),
-            child: Center(
-              child: Text('Nothing matches "${_quick.label}" right now.',
-                  style: TextStyle(fontSize: DsText.sm, color: c.inkMuted)),
-            ),
-          ),
-        )
-      else
-        SliverList.separated(
-          itemCount: shown.length,
-          separatorBuilder: (_, __) => const Divider(
-              height: 1, indent: DsSpace.s4, endIndent: DsSpace.s4),
-          itemBuilder: (context, i) => ProductListRow(
-            product: shown[i],
-            onTap: () => widget.onOpen(shown[i]),
-          ),
-        ),
-    ]);
-  }
 }
 
 class _HomeSkeleton extends StatelessWidget {

@@ -20,7 +20,10 @@ class CategoryThumb extends StatelessWidget {
     'Headphones': Icons.headphones_outlined,
     'Cpu': Icons.memory_outlined,
     'Home': Icons.chair_outlined,
-    'Leaf': Icons.spa_outlined,
+    'Leaf': Icons.eco_outlined,
+    'Flame': Icons.restaurant_outlined,
+    'ShoppingBag': Icons.shopping_basket_outlined,
+    'Gift': Icons.cake_outlined,
   };
 
   @override

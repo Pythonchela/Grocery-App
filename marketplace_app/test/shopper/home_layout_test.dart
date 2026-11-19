@@ -79,8 +79,7 @@ void main() {
       await finishLoad(tester);
 
       expect(find.text('Hero Banner'), findsNothing);
-      expect(find.text('Trending now'), findsOneWidget);
-      expect(find.text('Shop now'), findsOneWidget);
+      expect(find.text('Popular right now'), findsOneWidget);
     }, () => client);
   });
 
@@ -102,7 +101,7 @@ void main() {
       await finishLoad(tester);
 
       expect(find.text('Diwali sale'), findsOneWidget);
-      expect(find.text('Trending now'), findsOneWidget);
+      expect(find.text('Popular right now'), findsOneWidget);
     }, () => client);
   });
 
@@ -118,7 +117,7 @@ void main() {
       await finishLoad(tester);
 
       expect(find.text('Fresh in'), findsOneWidget);
-      expect(find.text('Trending now'), findsNothing);
+      expect(find.text('Popular right now'), findsNothing);
     }, () => client);
   });
 }

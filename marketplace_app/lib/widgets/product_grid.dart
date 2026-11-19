@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../design/tokens.g.dart';
 import 'product_card.dart';
 
-SliverGridDelegate productGridDelegate(BuildContext context) {
-  final available = MediaQuery.sizeOf(context).width - DsSpace.s4 * 2;
+/// [reserved] is width beside the grid that it cannot use (a category rail).
+SliverGridDelegate productGridDelegate(BuildContext context, {double reserved = 0}) {
+  final available = MediaQuery.sizeOf(context).width - reserved - DsSpace.s4 * 2;
   final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
   final columns = (available / (scale > 1.5 ? 240 : 170)).floor().clamp(2, 4);
   final count = scale > 1.5 && available < 480 ? 1 : columns;

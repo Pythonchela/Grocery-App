@@ -163,9 +163,11 @@ void main() {
         });
 
     Map<String, dynamic> item(String id, String title,
-            {int price = 400, int mrp = 800, double rating = 4.5, bool isNew = false}) =>
+            {int price = 400, int mrp = 800, double rating = 4.5, bool isNew = false, String? diet}) =>
         {
           ...product(id: id),
+          'diet': diet,
+          'category': {'name': 'Ethnic & Festive'},
           'title': title,
           'price': price,
           'mrp': mrp,
@@ -173,35 +175,31 @@ void main() {
           'is_new': isNew,
         };
 
-    testWidgets('lists items as detailed rows, narrowed by quick filters',
-        (tester) async {
-      phone(tester, width: 800, height: 1800); // wide enough to build every chip
+    testWidgets('shows the items in rails, and "Veg only" hides what is not vegetarian', (tester) async {
+      phone(tester, width: 800, height: 1800);
       final items = [
-        item('a', 'Cheap tee', price: 300, mrp: 300, rating: 3.0),
-        item('b', 'Fancy blazer', price: 3000, mrp: 6000, rating: 4.8, isNew: true),
+        item('a', 'Paneer wrap', diet: 'veg'),
+        item('b', 'Chicken roll', diet: 'non_veg'),
       ];
 
       await http.runWithClient(() async {
         await tester.pumpWidget(app(const HomeScreen()));
         await finishLoad(tester);
-        await tester.scrollUntilVisible(find.text('All items'), 300,
-            scrollable: find.byType(Scrollable).first);
+        expect(find.text('Paneer wrap'), findsWidgets);
+        expect(find.text('Chicken roll'), findsWidgets);
 
-        expect(find.byType(ProductListRow), findsNWidgets(2));
-
-        await tester.tap(find.text('Top rated'));
+        await tester.tap(find.text('Veg only'));
         await tester.pump();
-        expect(find.byType(ProductListRow), findsOneWidget);
-        expect(find.text('Fancy blazer'), findsWidgets);
+        expect(find.text('Paneer wrap'), findsWidgets);
+        expect(find.text('Chicken roll'), findsNothing);
 
-        await tester.tap(find.text('Under ₹500'));
+        await tester.tap(find.text('Veg only'));
         await tester.pump();
-        expect(find.byType(ProductListRow), findsOneWidget);
-        expect(find.text('Cheap tee'), findsWidgets);
+        expect(find.text('Chicken roll'), findsWidgets);
 
-        await tester.tap(find.text('New'));
+        await tester.tap(find.text('Offers'));
         await tester.pump();
-        expect(find.byType(ProductListRow), findsOneWidget);
+        expect(find.text('Paneer wrap'), findsWidgets, reason: 'both have an offer (price below MRP)');
         await tester.pumpWidget(const SizedBox());
       }, () => shop(items));
     });
@@ -211,7 +209,7 @@ void main() {
       await http.runWithClient(() async {
         await tester.pumpWidget(app(const HomeScreen()));
         await finishLoad(tester);
-        await tester.scrollUntilVisible(find.text('All items'), 300,
+        await tester.scrollUntilVisible(find.text('ADD').first, 300,
             scrollable: find.byType(Scrollable).first);
 
         await tester.tap(find.text('ADD').first);

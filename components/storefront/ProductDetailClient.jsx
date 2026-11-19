@@ -14,32 +14,85 @@ import RelatedProducts from './RelatedProducts';
 import ProductZoomLens from './ProductZoomLens';
 import HotspotDetailModal from './HotspotDetailModal';
 import { apiFetch } from '../../lib/apiClient';
-import { OptionPicker, VariantPicker } from './OptionPicker';
+import { OptionPicker } from './OptionPicker';
 import { optionUnitPrice, selectionDefaults, selectionProblem } from '../../lib/productOptions';
-import { assurances, galleryImages, openingVariant, ratingWord } from '../../lib/productPage';
-import { brand } from '@ds/brand';
-import { LEGAL } from '../../lib/legal';
+import { galleryImages, openingVariant } from '../../lib/productPage';
+import DietMark from '../DietMark';
 import {
   Star,
-  ShoppingBag,
+  Minus,
+  Plus,
   Award,
   Leaf,
   Cpu,
   Zap,
   Sparkles,
   ArrowLeft,
-  ShieldCheck,
   CheckCircle2,
   Heart,
   RotateCcw,
   Camera,
   CheckCircle,
-  Banknote,
-  CreditCard,
   Share2,
 } from 'lucide-react';
 
-const ASSURANCE_ICONS = { return: RotateCcw, cash: Banknote, card: CreditCard, bolt: Zap };
+/** "Select unit": each pack size as a card with its own price, so the choice and what it costs are one glance. */
+function UnitPicker({ product, selected, onChange }) {
+  return (
+    <div>
+      <h3 className="mb-2 text-sm font-black text-ink">Select unit</h3>
+      <div className="flex flex-wrap gap-2">
+        {product.variants.map((v) => {
+          const on = v.id === selected?.id;
+          const label = [v.color, v.size].filter(Boolean).join(' · ') || 'Default';
+          return (
+            <button
+              key={v.id}
+              type="button"
+              aria-pressed={on}
+              disabled={v.stock <= 0}
+              onClick={() => onChange(v)}
+              className={`min-w-28 rounded-card border px-3 py-2 text-left transition disabled:opacity-50 ${
+                on ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong'
+              }`}
+            >
+              <span className="block text-sm font-bold text-ink">{label}</span>
+              <span className="block text-base font-black text-ink">
+                {v.stock > 0 ? `₹${Number(v.price ?? product.price).toLocaleString('en-IN')}` : 'Sold out'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** One button that becomes "- 2 +" with a way to the basket once the item is in it. */
+function AddAction({ product, disabled, onAdd, className = '' }) {
+  const { cartItems, handleUpdateQty, setIsCartOpen } = useStore();
+  const lines = cartItems.filter((i) => i.id === product.id);
+  const qty = lines.reduce((n, i) => n + i.quantity, 0);
+  const last = lines[lines.length - 1];
+
+  if (!qty) {
+    return (
+      <Button variant="highlight" size="lg" onClick={onAdd} disabled={disabled} className={className}>
+        {disabled && !product.inStock ? 'Out of stock' : 'Add to cart'}
+      </Button>
+    );
+  }
+  return (
+    <div className={`flex items-center gap-3 ${className}`}>
+      <div className="flex items-center overflow-hidden rounded-control bg-accent text-on-accent">
+        <button type="button" aria-label="Remove one" onClick={() => handleUpdateQty(last.cartItemId, last.quantity - 1)} className="p-3 hover:bg-accent-hover"><Minus className="h-4 w-4" /></button>
+        <span className="min-w-8 text-center text-base font-black">{qty}</span>
+        <button type="button" aria-label="Add one more" onClick={() => handleUpdateQty(last.cartItemId, last.quantity + 1)} className="p-3 hover:bg-accent-hover"><Plus className="h-4 w-4" /></button>
+      </div>
+      <Button size="lg" onClick={() => setIsCartOpen(true)} className="flex-1">View cart</Button>
+    </div>
+  );
+}
 
 export default function ProductDetailClient({ product }) {
   const { handleAddToCart, authToken } = useStore();
@@ -231,8 +284,13 @@ export default function ProductDetailClient({ product }) {
         <div className="space-y-6">
           
           <div className="space-y-3">
-            {/* Badges */}
+            {/* How soon, and what it is */}
             <div className="flex items-center gap-2 flex-wrap">
+              {Number(product.deliveryInfo?.prep_minutes) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-chip bg-accent-soft px-2.5 py-1 text-xs font-black text-accent">
+                  <Zap className="w-3.5 h-3.5 fill-current" /> Ready in {product.deliveryInfo.prep_minutes} min
+                </span>
+              )}
               {product.lifestyleBadges.map((badge, i) => (
                 <span key={i} className="text-[11px] font-extrabold text-ink bg-surface-sunken border border-line px-2.5 py-1 rounded-pill flex items-center gap-1.5">
                   {renderBadgeIcon(badge)}
@@ -241,9 +299,11 @@ export default function ProductDetailClient({ product }) {
               ))}
             </div>
 
-            <h1 className="text-3xl font-black text-ink leading-tight">
-              {product.title}
+            <h1 className="flex items-start gap-2.5 text-3xl font-black text-ink leading-tight">
+              <span className="mt-2"><DietMark diet={product.diet} size="lg" /></span>
+              <span>{product.title}</span>
             </h1>
+            {product.brand && <p className="text-sm font-medium text-ink-muted">{product.brand}</p>}
 
             {/* Ratings */}
             {product.rating > 0 && (
@@ -252,14 +312,11 @@ export default function ProductDetailClient({ product }) {
                   <Star className="w-4 h-4 fill-rating text-warning" />
                   <span className="text-xs font-black text-warning">{Number(product.rating).toFixed(1)}</span>
                 </div>
-                <span className="text-xs font-bold text-success bg-success-soft rounded-pill px-2.5 py-1">
-                  {ratingWord(product.rating)}
-                </span>
                 <a
                   href="#reviews"
                   className="text-sm font-semibold text-ink-subtle underline decoration-line-strong underline-offset-4 hover:text-ink"
                 >
-                  {product.reviewsCount} {product.reviewsCount === 1 ? 'rating' : 'ratings'} by verified buyers
+                  {product.reviewsCount} {product.reviewsCount === 1 ? 'rating' : 'ratings'}
                 </a>
               </div>
             )}
@@ -268,12 +325,12 @@ export default function ProductDetailClient({ product }) {
           {/* Pricing */}
           <div className="pt-4 border-t border-line">
             <div className="flex items-end gap-3 mb-1">
-              <span className="text-4xl font-bold text-ink">₹{unitPrice.toLocaleString('en-IN')}</span>
+              <span className="text-4xl font-black text-ink">₹{unitPrice.toLocaleString('en-IN')}</span>
               {unitMrp > unitPrice && (
                 <span className="text-lg text-ink-subtle line-through font-medium mb-1">MRP ₹{Math.round(unitMrp).toLocaleString('en-IN')}</span>
               )}
               {product.discount > 0 && (
-                <span className="bg-danger text-ink-inverse text-xs font-black px-2 py-1 rounded-control mb-1.5">
+                <span className="bg-accent text-on-accent text-xs font-black px-2 py-1 rounded-control mb-1.5">
                   {product.discount}% OFF
                 </span>
               )}
@@ -281,22 +338,12 @@ export default function ProductDetailClient({ product }) {
             <p className="text-xs font-medium text-success flex items-center gap-1 mt-2">
               <CheckCircle2 className="w-4 h-4" /> Inclusive of all taxes
             </p>
-            <ul className="flex flex-wrap gap-2 mt-4">
-              {assurances(product, LEGAL.returnDays).map((a) => {
-                const Icon = ASSURANCE_ICONS[a.icon] || ShieldCheck;
-                return (
-                  <li key={a.label} className="inline-flex items-center gap-2 border border-line rounded-card px-3 py-2 text-sm font-semibold text-ink">
-                    <Icon className="w-[18px] h-[18px] text-accent" /> {a.label}
-                  </li>
-                );
-              })}
-            </ul>
           </div>
 
           {/* Variants: colour swatches and size chips, or a plain list */}
           {product.variants?.length > 1 && (
             <div className="pt-4">
-              <VariantPicker variants={product.variants} selected={selectedVariant} onChange={setSelectedVariant} />
+              <UnitPicker product={product} selected={selectedVariant} onChange={setSelectedVariant} />
             </div>
           )}
           {selectedVariant?.stock <= 5 && selectedVariant?.stock > 0 && (
@@ -309,28 +356,9 @@ export default function ProductDetailClient({ product }) {
           {/* Custom options set up for this product's category */}
           <OptionPicker groups={groups} selection={selection} onChange={setSelection} />
 
-          {/* Actions (on a phone these sit in the bar at the bottom of the screen) */}
-          <div className="hidden md:grid grid-cols-2 gap-4 pt-2">
-            <Button
-              size="lg"
-              onClick={addToCart}
-              disabled={outOfStock || Boolean(optionProblem)}
-              className="shadow-hover"
-              leadingIcon={<ShoppingBag className="w-5 h-5" />}
-            >
-              {outOfStock ? 'Out of Stock' : 'Add to Cart'}
-            </Button>
-
-            <Button
-              variant="highlight"
-              size="lg"
-              onClick={addToCart}
-              disabled={outOfStock || Boolean(optionProblem)}
-              className="shadow-hover"
-              leadingIcon={<Zap className="w-5 h-5 fill-current" />}
-            >
-              Buy at ₹{unitPrice.toLocaleString('en-IN')}
-            </Button>
+          {/* Add to cart (on a phone this sits in the bar at the bottom of the screen) */}
+          <div className="hidden md:block pt-2">
+            <AddAction product={product} disabled={outOfStock || Boolean(optionProblem)} onAdd={addToCart} />
           </div>
 
           {optionProblem && (
@@ -383,15 +411,6 @@ export default function ProductDetailClient({ product }) {
           {/* All details: specifications, description, manufacturer info */}
           <ProductDetailsTabs product={product} />
 
-          {/* Trust Banner Inline */}
-          <div className="bg-pastel-blue p-4 rounded-control border border-accent flex items-start gap-3 mt-4">
-            <ShieldCheck className="w-6 h-6 text-accent shrink-0" />
-            <div>
-              <h4 className="text-xs font-black text-ink">100% Authentic Product</h4>
-              <p className="text-[11px] text-ink-muted mt-0.5">Verified by {brand.nameDisplay} Quality Check. Eligible for 7-day hassle-free returns.</p>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -407,26 +426,13 @@ export default function ProductDetailClient({ product }) {
         <RelatedProducts productId={product.id} />
       </div>
 
-      {/* Phone: the buy buttons stay at the bottom of the screen, as in the app */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-line px-4 py-3 flex gap-3 shadow-card">
-        <Button
-          size="lg"
-          variant="secondary"
-          onClick={addToCart}
-          disabled={outOfStock || Boolean(optionProblem)}
-          className="flex-1"
-        >
-          {outOfStock ? 'Out of stock' : 'Add to cart'}
-        </Button>
-        <Button
-          variant="highlight"
-          size="lg"
-          onClick={addToCart}
-          disabled={outOfStock || Boolean(optionProblem)}
-          className="flex-1"
-        >
-          Buy at ₹{unitPrice.toLocaleString('en-IN')}
-        </Button>
+      {/* Phone: the price and the add button stay at the bottom of the screen, as in the app */}
+      <div className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-line px-4 py-3 flex items-center gap-3 shadow-card">
+        <div className="shrink-0">
+          <p className="text-xl font-black text-ink leading-none">₹{unitPrice.toLocaleString('en-IN')}</p>
+          <p className="text-2xs font-medium text-ink-subtle">Inclusive of all taxes</p>
+        </div>
+        <AddAction product={product} disabled={outOfStock || Boolean(optionProblem)} onAdd={addToCart} className="flex-1 justify-end" />
       </div>
     </div>
   );

@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:marketplace_app/data/models.dart';
 import 'package:marketplace_app/main.dart';
+import 'package:marketplace_app/screens/category_screen.dart';
 import 'package:marketplace_app/screens/home_screen.dart';
 import 'package:marketplace_app/screens/search_screen.dart';
 import 'package:marketplace_app/widgets/category_shortcuts.dart';
+import 'package:marketplace_app/widgets/quick_home.dart';
 import 'support.dart';
 
 void main() {
@@ -81,10 +83,10 @@ void main() {
       await tester.pumpWidget(app(const HomeScreen()));
       await finishLoad(tester);
       expect(find.text('Could not reach the store'), findsNothing);
-      expect(find.byType(CategoryShortcuts), findsOneWidget);
-      await tester.tap(find.text('Shop now'));
+      expect(find.byType(QuickCategoryGrid), findsOneWidget);
+      await tester.tap(find.byType(CategoryThumb).first);
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('category-wellness')), findsOneWidget);
+      expect(find.byType(CategoryScreen), findsOneWidget);
     }, () => client);
   });
 

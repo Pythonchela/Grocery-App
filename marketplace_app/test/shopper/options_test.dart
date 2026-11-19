@@ -322,15 +322,15 @@ void main() {
         expect(find.text('Add-ons'), findsOneWidget);
         expect(find.text('Leave out'), findsOneWidget);
         // Half plate is the default.
-        expect(find.text('Buy at ₹180'), findsOneWidget);
+        expect(find.text('₹180'), findsWidgets);
 
         await tester.tap(find.text('Full plate'));
         await tester.pump();
-        expect(find.text('Buy at ₹320'), findsOneWidget);
+        expect(find.text('₹320'), findsWidgets);
 
         await tester.tap(find.text('Extra cheese'));
         await tester.pump();
-        expect(find.text('Buy at ₹350'), findsOneWidget);
+        expect(find.text('₹350'), findsWidgets);
 
         await tester.pumpWidget(const SizedBox());
       }, () => shop(foodProduct()));
@@ -397,12 +397,12 @@ void main() {
 
         // A required stepper opens at its starting value.
         expect(find.text('1 kg'), findsOneWidget);
-        expect(find.text('Buy at ₹60'), findsOneWidget);
+        expect(find.text('₹60'), findsWidgets);
 
         await tester.tap(find.byTooltip('More weight'));
         await tester.pump();
         expect(find.text('1.5 kg'), findsOneWidget);
-        expect(find.text('Buy at ₹90'), findsOneWidget);
+        expect(find.text('₹90'), findsWidgets);
         await tester.pumpWidget(const SizedBox());
       }, () => shop(tomatoes));
     });

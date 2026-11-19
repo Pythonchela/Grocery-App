@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../data/api_client.dart';
 import '../data/models.dart';
 import '../data/product_options.dart';
-import '../design/brand.g.dart';
 import '../design/components.dart';
 import '../design/mobile_components.dart';
 import '../design/theme.dart';
@@ -105,21 +104,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
 
+    // The bar under the page turns into "- 1 +" and a View cart button: that is the confirmation.
     if (thenCheckout) {
       Navigator.of(context)
           .push(MaterialPageRoute(builder: (_) => const CartScreen()));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${p.title} added to cart'),
-          action: SnackBarAction(
-            label: 'View cart',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CartScreen()),
-            ),
-          ),
-        ),
-      );
     }
   }
 
@@ -177,7 +165,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(p.brand.isEmpty ? DsBrand.name : p.brand),
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_bag_outlined),
@@ -198,66 +185,62 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: DsSpace.s3),
-                if (p.variants.length > 1)
-                  VariantPicker(
-                    variants: p.variants,
-                    selected: _variant,
-                    onChanged: (v) => setState(() => _variant = v),
-                  ),
-                if (hasOptions)
-                  OptionPicker(
-                    groups: p.optionGroups,
-                    selection: _selection,
-                    onChanged: (next) => setState(() => _selection = next),
-                  ),
-                const SizedBox(height: DsSpace.s5),
-                if (p.brand.isNotEmpty)
-                  Text(p.brand,
-                      style: TextStyle(
-                          fontSize: DsText.base,
-                          fontWeight: DsWeight.bold,
-                          color: c.ink)),
-                const SizedBox(height: 2),
+                Wrap(
+                  spacing: DsSpace.s2,
+                  runSpacing: DsSpace.s2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (p.prepMinutes > 0) _ReadyChip(minutes: p.prepMinutes),
+                    if (p.isNew) const BxBadge('NEW', tone: BxTone.newItem),
+                    ...p.badges.take(2).map((b) => BxBadge(b)),
+                  ],
+                ),
+                const SizedBox(height: DsSpace.s3),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (DietMark.isKnown(p.diet))
                       Padding(
-                        padding: const EdgeInsets.only(top: 4, right: 8),
-                        child: DietMark(p.diet, size: 16),
+                        padding: const EdgeInsets.only(top: 6, right: 8),
+                        child: DietMark(p.diet, size: 18),
                       ),
                     Expanded(
                       child: Text(
                         p.title,
                         style: TextStyle(
-                          fontSize: DsText.md,
-                          height: DsText.mdHeight,
-                          color: c.inkMuted,
+                          fontFamily: DsFont.display,
+                          fontSize: DsText.x2xl,
+                          height: DsText.x2xlHeight,
+                          fontWeight: DsWeight.black,
+                          color: c.ink,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: DsSpace.s3),
+                if (p.brand.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(p.brand, style: TextStyle(fontSize: DsText.sm, color: c.inkMuted)),
+                  ),
+                if (p.variants.length > 1) ...[
+                  const SizedBox(height: DsSpace.s5),
+                  _UnitPicker(
+                    product: p,
+                    selected: _variant,
+                    onChanged: (v) => setState(() => _variant = v),
+                  ),
+                ],
+                const SizedBox(height: DsSpace.s5),
                 Wrap(
                   spacing: DsSpace.s2,
+                  runSpacing: DsSpace.s1,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    if (mrp > price && p.discount > 0)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.arrow_downward_rounded, size: 18, color: c.success),
-                          Text(
-                            '${p.discount}%',
-                            style: TextStyle(
-                              fontSize: DsText.lg,
-                              fontWeight: DsWeight.bold,
-                              color: c.success,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Text(
+                      formatMoney(price),
+                      style: TextStyle(fontSize: DsText.x2xl, fontWeight: DsWeight.black, color: c.ink),
+                    ),
                     if (mrp > price)
                       Text(
                         formatMoney(mrp),
@@ -267,26 +250,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
-                    Text(
-                      formatMoney(price),
-                      style: TextStyle(
-                          fontSize: DsText.x2xl,
-                          fontWeight: DsWeight.black,
-                          color: c.ink),
-                    ),
+                    if (mrp > price && p.discount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: c.accent, borderRadius: DsRadius.chipAll),
+                        child: Text('${p.discount}% OFF',
+                            style: TextStyle(fontSize: DsText.xs, fontWeight: DsWeight.bold, color: c.onAccent)),
+                      ),
                   ],
                 ),
-                Text('Inclusive of all taxes',
-                    style: TextStyle(fontSize: DsText.xs, color: c.inkSubtle)),
-                if (p.isNew || p.badges.isNotEmpty) ...[
-                  const SizedBox(height: DsSpace.s3),
-                  Wrap(
-                    spacing: DsSpace.s2,
-                    runSpacing: DsSpace.s2,
-                    children: [
-                      if (p.isNew) const BxBadge('NEW', tone: BxTone.newItem),
-                      ...p.badges.take(3).map((b) => BxBadge(b)),
-                    ],
+                Text('Inclusive of all taxes', style: TextStyle(fontSize: DsText.xs, color: c.inkSubtle)),
+                if (hasOptions) ...[
+                  const SizedBox(height: DsSpace.s5),
+                  OptionPicker(
+                    groups: p.optionGroups,
+                    selection: _selection,
+                    onChanged: (next) => setState(() => _selection = next),
                   ),
                 ],
                 const SizedBox(height: DsSpace.s4),
@@ -396,31 +375,186 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BxBottomBar(
-        child: Row(
-          children: [
-            Expanded(
-              child: BxButton(
-                label: inStock ? 'Add to cart' : 'Out of stock',
-                variant: BxButtonVariant.secondary,
-                size: BxButtonSize.lg,
-                fullWidth: true,
-                onPressed: inStock ? () => _addToCart() : null,
-              ),
-            ),
-            const SizedBox(width: DsSpace.s3),
-            Expanded(
-              child: BxButton(
-                label: 'Buy at ${formatMoney(price)}',
-                variant: BxButtonVariant.highlight,
-                size: BxButtonSize.lg,
-                fullWidth: true,
-                onPressed:
-                    inStock ? () => _addToCart(thenCheckout: true) : null,
-              ),
-            ),
-          ],
+      bottomNavigationBar: _QuickBottomBar(
+        product: p,
+        price: price,
+        inStock: inStock,
+        onAdd: () => _addToCart(),
+      ),
+    );
+  }
+}
+
+/// "Ready in 15 min": how soon the item is made or packed.
+class _ReadyChip extends StatelessWidget {
+  final int minutes;
+
+  const _ReadyChip({required this.minutes});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ds;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: c.accentSoft, borderRadius: DsRadius.chipAll),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.bolt, size: 14, color: c.accent),
+          const SizedBox(width: 2),
+          Text('Ready in $minutes min',
+              style: TextStyle(fontSize: DsText.xs, fontWeight: DsWeight.bold, color: c.accent)),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Select unit": each pack size as a card with its own price, so the choice and what it costs are
+/// one glance (500 g or 1 kg; half or full).
+class _UnitPicker extends StatelessWidget {
+  final Product product;
+  final Variant? selected;
+  final ValueChanged<Variant> onChanged;
+
+  const _UnitPicker({required this.product, required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ds;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Select unit', style: TextStyle(fontSize: DsText.md, fontWeight: DsWeight.black, color: c.ink)),
+        const SizedBox(height: DsSpace.s2),
+        SizedBox(
+          height: 78,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: product.variants.length,
+            separatorBuilder: (_, __) => const SizedBox(width: DsSpace.s2),
+            itemBuilder: (context, i) {
+              final v = product.variants[i];
+              final on = v.id == selected?.id;
+              final available = v.stock > 0;
+              return Semantics(
+                button: true,
+                selected: on,
+                label: v.label,
+                child: Material(
+                  color: on ? c.accentSoft : c.surface,
+                  borderRadius: DsRadius.cardAll,
+                  child: InkWell(
+                    borderRadius: DsRadius.cardAll,
+                    onTap: available ? () => onChanged(v) : null,
+                    child: Container(
+                      width: 104,
+                      padding: const EdgeInsets.all(DsSpace.s2),
+                      decoration: BoxDecoration(
+                        borderRadius: DsRadius.cardAll,
+                        border: Border.all(color: on ? c.accent : c.line, width: on ? 1.5 : 1),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(v.label.isEmpty ? 'Default' : v.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: DsText.sm,
+                                  fontWeight: DsWeight.bold,
+                                  color: available ? c.ink : c.inkSubtle)),
+                          const SizedBox(height: 2),
+                          Text(available ? formatMoney(v.price ?? product.price) : 'Sold out',
+                              style: TextStyle(
+                                  fontSize: DsText.base,
+                                  fontWeight: DsWeight.black,
+                                  color: available ? c.ink : c.inkSubtle)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
+      ],
+    );
+  }
+}
+
+/// The bar under the page: what it costs on the left, and one button that becomes "- 2 +" once
+/// it is in the cart, with a way straight to the cart beside it.
+class _QuickBottomBar extends StatelessWidget {
+  final Product product;
+  final double price;
+  final bool inStock;
+  final VoidCallback onAdd;
+
+  const _QuickBottomBar({required this.product, required this.price, required this.inStock, required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ds;
+    return BxBottomBar(
+      child: AnimatedBuilder(
+        animation: AppState.instance,
+        builder: (context, _) {
+          final lines = AppState.instance.cart.where((l) => l.product.id == product.id).toList();
+          final inCart = lines.fold<int>(0, (s, l) => s + l.quantity);
+          final line = lines.isEmpty ? null : lines.last;
+
+          return Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(formatMoney(price),
+                        style: TextStyle(fontSize: DsText.xl, fontWeight: DsWeight.black, color: c.ink)),
+                    Text('Inclusive of all taxes', style: TextStyle(fontSize: DsText.x2xs, color: c.inkSubtle)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: DsSpace.s3),
+              if (!inStock)
+                Text('Out of stock', style: TextStyle(fontSize: DsText.md, fontWeight: DsWeight.bold, color: c.inkSubtle))
+              else if (line == null)
+                SizedBox(
+                  width: 190,
+                  child: BxButton(
+                    label: 'Add to cart',
+                    variant: BxButtonVariant.highlight,
+                    size: BxButtonSize.lg,
+                    fullWidth: true,
+                    onPressed: onAdd,
+                  ),
+                )
+              else ...[
+                BxQuantityStepper(
+                  quantity: inCart,
+                  minQuantity: 1,
+                  onRemove: () => AppState.instance.updateQuantity(line.key, line.quantity - 1),
+                  onChanged: (q) {
+                    if (q > inCart) {
+                      AppState.instance.addToCart(product, variant: line.variant, selection: line.selection);
+                    } else {
+                      AppState.instance.updateQuantity(line.key, line.quantity - 1);
+                    }
+                  },
+                ),
+                const SizedBox(width: DsSpace.s2),
+                BxButton(
+                  label: 'View cart',
+                  size: BxButtonSize.lg,
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CartScreen())),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

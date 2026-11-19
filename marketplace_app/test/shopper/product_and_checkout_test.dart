@@ -43,12 +43,12 @@ void main() {
     await http.runWithClient(() async {
       await tester.pumpWidget(app(const ProductDetailScreen(productId: 'p1')));
       await finishLoad(tester);
-      await tester.scrollUntilVisible(find.bySemanticsLabel('Red'), 250,
+      await tester.scrollUntilVisible(find.text('Red · L'), 250,
           scrollable: find
               .descendant(
                   of: find.byType(ListView), matching: find.byType(Scrollable))
               .first);
-      await tester.tap(find.bySemanticsLabel('Red'));
+      await tester.tap(find.text('Red · L'));
       await tester.pump();
       await tester.tap(find.text('Add to cart'));
       await tester.pump();
@@ -66,9 +66,9 @@ void main() {
     await http.runWithClient(() async {
       await tester.pumpWidget(app(const ProductDetailScreen(productId: 'p1')));
       await finishLoad(tester);
-      final button = tester.widget<BxButton>(find.byWidgetPredicate(
-          (w) => w is BxButton && w.label == 'Out of stock'));
-      expect(button.onPressed, isNull);
+      // There is nothing to press: the bar says so instead of offering a button.
+      expect(find.text('Out of stock'), findsOneWidget);
+      expect(find.text('Add to cart'), findsNothing);
       expect(AppState.instance.cart, isEmpty);
     }, () => client);
   });
