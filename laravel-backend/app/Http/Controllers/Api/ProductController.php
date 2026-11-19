@@ -41,6 +41,10 @@ class ProductController extends Controller
         'rollover_image' => 'nullable|string',
         'authenticity_grade' => 'nullable|string',
         'local_store_available' => 'nullable|boolean',
+        // What a search result shows for this product. The column is 255 characters, and search engines show about 160.
+        // Without a rule here the API silently dropped whatever the form sent, so a seller's own text was never saved.
+        'meta_title' => 'nullable|string|max:255',
+        'meta_description' => 'nullable|string|max:255',
         'local_store_name' => 'nullable|string',
         'express_pincodes' => 'nullable|array',
         'hotspots' => 'nullable|array',
