@@ -4,7 +4,6 @@ import '../data/api_client.dart';
 import '../data/models.dart';
 import '../data/storefront.dart';
 import '../design/brand.g.dart';
-import '../design/brand_mark.dart';
 import '../design/components.dart';
 import '../design/theme.dart';
 import '../design/tokens.g.dart';
@@ -35,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _vegOnly = false;
   bool _offersOnly = false;
   bool _loading = true;
+  Category? _tab;
   String? _error;
 
   bool _wasSignedIn = AppState.instance.isSignedIn;
@@ -146,42 +146,39 @@ class _HomeScreenState extends State<HomeScreen> {
             slivers: [
               SliverAppBar(
                 pinned: true,
-                backgroundColor: c.accentSoft,
+                backgroundColor: c.accent,
+                foregroundColor: c.onAccent,
                 surfaceTintColor: Colors.transparent,
-                toolbarHeight: 64,
+                toolbarHeight: 76,
                 titleSpacing: DsSpace.s4,
-                title: Row(
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    BrandMark(logoUrl: AppState.instance.logoUrl, size: 36),
-                    const SizedBox(width: DsSpace.s3),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            readyRange([..._featured, ..._trending]) == null
-                                ? DsBrand.name
-                                : 'Ready in ${readyRange([..._featured, ..._trending])}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: DsFont.display,
-                              fontSize: DsText.xl,
-                              height: 1.15,
-                              fontWeight: DsWeight.black,
-                              color: c.ink,
-                            ),
-                          ),
-                          Text(
-                            'Delivered fresh by ${DsBrand.name}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: DsText.xs, color: c.inkMuted),
-                          ),
-                        ],
+                    Text(
+                      '${DsBrand.name} in',
+                      maxLines: 1,
+                      style: TextStyle(fontSize: DsText.sm, color: c.onAccent.withValues(alpha: 0.85)),
+                    ),
+                    Text(
+                      readyRange([..._featured, ..._trending]) ?? 'minutes',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: DsFont.display,
+                        fontSize: 26,
+                        height: 1.1,
+                        fontWeight: FontWeight.w800,
+                        color: c.onAccent,
                       ),
                     ),
+                    if (AppState.instance.isSignedIn && (AppState.instance.user?.name ?? '').trim().isNotEmpty)
+                      Text(
+                        'Delivering to ${AppState.instance.user!.name.trim().split(RegExp(r'\s+')).first}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: DsText.xs, color: c.onAccent.withValues(alpha: 0.85)),
+                      ),
                   ],
                 ),
                 actions: [
@@ -209,15 +206,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: DsSpace.s2),
                 ],
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(64),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(DsSpace.s4, 0, DsSpace.s4, DsSpace.s3),
-                    child: QuickSearchBar(
-                      hint: _featured.isEmpty ? 'Search for products' : 'Search "${_featured.first.title.replaceFirst('Sample: ', '')}"',
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  preferredSize: const Size.fromHeight(64 + 42),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(DsSpace.s4, 0, DsSpace.s4, DsSpace.s2),
+                        child: QuickSearchBar(
+                          hint: _featured.isEmpty ? 'Search for products' : 'Search "${_featured.first.title.replaceFirst('Sample: ', '')}"',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SearchScreen()),
+                          ),
+                        ),
                       ),
-                    ),
+                      QuickTabs(
+                        categories: _categories,
+                        selected: _tab,
+                        onSelected: (category) => setState(() => _tab = category),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -265,12 +271,14 @@ class _HomeScreenState extends State<HomeScreen> {
     bool keep(Product p) =>
         !(_vegOnly && (p.diet == 'non_veg' || p.diet == 'egg')) && !(_offersOnly && p.discount <= 0);
 
-    final popular = _trending.where(keep).toList();
+    // A new shop has no sales to rank yet, so its first items stand in: ADD is always on the home page.
+    final popular = (_trending.isNotEmpty ? _trending : _featured.take(10)).where(keep).toList();
     final forYou = _forYou.where(keep).toList();
     final shown = _featured.where(keep).toList();
     final byCategory = <Category, List<Product>>{
       for (final category in _categories)
-        category: shown.where((p) => p.categoryName == category.name).toList(),
+        if (_tab == null || _tab!.slug == category.slug)
+          category: shown.where((p) => p.categoryName == category.name).toList(),
     };
     void open(Category category) => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => CategoryScreen(category: category, siblings: _categories)));
@@ -284,8 +292,10 @@ class _HomeScreenState extends State<HomeScreen> {
           onOffers: (v) => setState(() => _offersOnly = v),
         ),
       ),
-      SliverToBoxAdapter(child: QuickCategoryGrid(categories: _categories, onSelected: open)),
-      SliverToBoxAdapter(child: QuickSection(title: 'Popular right now', products: popular, onTap: _openProduct)),
+      if (_tab == null) ...[
+        SliverToBoxAdapter(child: QuickCategoryGrid(categories: _categories, onSelected: open)),
+        SliverToBoxAdapter(child: QuickSection(title: 'Popular right now', products: popular, onTap: _openProduct)),
+      ],
       if (withReels && _hasReels)
         SliverToBoxAdapter(
           child: ReelsPromo(
@@ -295,12 +305,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-      SliverToBoxAdapter(child: QuickSection(title: 'Picked for you', products: forYou, onTap: _openProduct)),
+      if (_tab == null)
+        SliverToBoxAdapter(child: QuickSection(title: 'Picked for you', products: forYou, onTap: _openProduct)),
       for (final entry in byCategory.entries)
         SliverToBoxAdapter(
-          child: QuickSection(
+          child: QuickTileGrid(
             title: entry.key.name,
-            products: entry.value.take(10).toList(),
+            products: entry.value.take(_tab == null ? 8 : 40).toList(),
             onTap: _openProduct,
             onSeeAll: () => open(entry.key),
           ),

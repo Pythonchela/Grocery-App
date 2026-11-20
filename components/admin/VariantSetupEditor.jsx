@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { currentKind } from '../../lib/storeKind';
 
 /** Starting points, so nobody types a shoe size chart from nothing. */
 export const SETUP_PRESETS = [
@@ -53,7 +54,80 @@ export const SETUP_PRESETS = [
       colors: [{ name: 'Pink', hex: '#EC407A' }, { name: 'Blue', hex: '#1E88E5' }, { name: 'Yellow', hex: '#FDD835' }],
     },
   },
+  {
+    id: 'portion',
+    label: 'Dish portions',
+    setup: { size_label: 'Portion', sizes: ['Half plate', 'Full plate'], color_label: 'Flavour', colors: [] },
+  },
+  {
+    id: 'drinks',
+    label: 'Drinks',
+    setup: { size_label: 'Size', sizes: ['250 ml', '500 ml', '1 L', '2 L'], color_label: 'Flavour', colors: [] },
+  },
+  {
+    id: 'multipack',
+    label: 'Multipacks',
+    setup: { size_label: 'Pack of', sizes: ['1', '2', '4', '6', '12'], color_label: 'Flavour', colors: [] },
+  },
+  {
+    id: 'sofas',
+    label: 'Sofas and chairs',
+    setup: {
+      size_label: 'Seats',
+      sizes: ['1-seater', '2-seater', '3-seater', '5-seater L-shape'],
+      color_label: 'Fabric colour',
+      colors: [
+        { name: 'Grey', hex: '#6B7280' }, { name: 'Teal', hex: '#0F766E' }, { name: 'Beige', hex: '#D6C7A1' },
+        { name: 'Navy', hex: '#1F2A5A' }, { name: 'Brown', hex: '#6D4C41' },
+      ],
+    },
+  },
+  {
+    id: 'beds',
+    label: 'Beds and mattresses',
+    setup: {
+      size_label: 'Bed size',
+      sizes: ['Single', 'Double', 'Queen', 'King'],
+      color_label: 'Finish',
+      colors: [{ name: 'Walnut', hex: '#5D4037' }, { name: 'Teak', hex: '#8B5A2B' }, { name: 'White', hex: '#FFFFFF' }, { name: 'Grey', hex: '#6B7280' }],
+    },
+  },
+  {
+    id: 'storage',
+    label: 'Wardrobes, tables and storage',
+    setup: {
+      size_label: 'Size',
+      sizes: ['2-door', '3-door', '4-door', '4 ft', '6 ft'],
+      color_label: 'Finish',
+      colors: [{ name: 'Walnut', hex: '#5D4037' }, { name: 'Teak', hex: '#8B5A2B' }, { name: 'White', hex: '#FFFFFF' }, { name: 'Oak', hex: '#C8A165' }],
+    },
+  },
+  {
+    id: 'laundry',
+    label: 'Washing machines',
+    setup: {
+      size_label: 'Capacity',
+      sizes: ['6 kg', '6.5 kg', '7 kg', '8 kg', '9 kg'],
+      color_label: 'Colour',
+      colors: [{ name: 'White', hex: '#FFFFFF' }, { name: 'Silver', hex: '#C0C0C0' }, { name: 'Dark grey', hex: '#4B5563' }],
+    },
+  },
+  {
+    id: 'cooling',
+    label: 'Fridges, ACs and coolers',
+    setup: {
+      size_label: 'Capacity',
+      sizes: ['190 L', '260 L', '340 L', '1 ton', '1.5 ton', '2 ton'],
+      color_label: 'Colour',
+      colors: [{ name: 'White', hex: '#FFFFFF' }, { name: 'Silver', hex: '#C0C0C0' }, { name: 'Black', hex: '#111111' }],
+    },
+  },
 ];
+
+/** The quick starts that fit this kind of store, in the order it lists them. */
+const KIND_PRESETS = (currentKind.setupPresets || [])
+  .map((id) => SETUP_PRESETS.find((p) => p.id === id))
+  .filter(Boolean);
 
 const inputCls =
   'w-full bg-surface-muted border border-line rounded-control px-3 py-2 text-xs font-medium focus:outline-none focus:border-line-strong';
@@ -108,7 +182,7 @@ export default function VariantSetupEditor({ value, onChange }) {
       <div>
         <p className="mb-1.5 text-[11px] font-semibold text-ink-muted">Start from</p>
         <div className="flex flex-wrap gap-2">
-          {SETUP_PRESETS.map((p) => (
+          {(KIND_PRESETS.length ? KIND_PRESETS : SETUP_PRESETS).map((p) => (
             <button
               key={p.id}
               type="button"

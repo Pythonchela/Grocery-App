@@ -186,7 +186,7 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  static const _labels = ['Home', 'Categories', 'Cart', 'Orders', 'Account'];
+  static const _labels = ['Home', 'Categories', 'Cart', 'Order again', 'Account'];
 
   @override
   Widget build(BuildContext context) {
@@ -224,9 +224,9 @@ class _AppShellState extends State<AppShell> {
               label: 'Cart',
               badge: cartCount),
           const BxNavItem(
-              icon: Icons.receipt_long_outlined,
-              activeIcon: Icons.receipt_long,
-              label: 'Orders'),
+              icon: Icons.replay_outlined,
+              activeIcon: Icons.replay,
+              label: 'Order again'),
           const BxNavItem(
               icon: Icons.person_outline,
               activeIcon: Icons.person,

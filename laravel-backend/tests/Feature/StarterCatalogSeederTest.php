@@ -115,4 +115,14 @@ class StarterCatalogSeederTest extends TestCase
         $this->assertSame('parcel', Category::where('slug', 'restaurant')->value('delivery_profile'));
         $this->assertSame(5, (int) Category::where('slug', 'restaurant')->value('prep_minutes'));
     }
+
+    public function test_groceries_come_with_their_pack_sizes_ready_to_tick(): void
+    {
+        $this->seed(StarterCatalogSeeder::class);
+
+        $setup = Category::where('slug', 'groceries')->value('variant_setup');
+        $this->assertSame('Pack size', $setup['size_label']);
+        $this->assertContains('500 g', $setup['sizes']);
+        $this->assertSame([], $setup['colors']);
+    }
 }

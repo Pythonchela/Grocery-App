@@ -81,9 +81,10 @@ const color = {
   'line-strong':     [palette.neutral[400], palette.slate.borderStrong],
 
   // Brand — primary is the near-black used for buttons and nav
-  'primary':         [palette.neutral[900], '#F3F4F6'],
-  'primary-hover':   [palette.neutral[800], palette.white],
-  'on-primary':      [palette.white,        palette.neutral[900]],
+  // Buttons and the open tab are the shop's green, as in quick-delivery apps.
+  'primary':         [palette.fresh[500],   '#3DBE5A'],
+  'primary-hover':   [palette.fresh[600],   '#63D07C'],
+  'on-primary':      [palette.white,        palette.neutral[950]],
 
   // Brand — accent is the action colour: fresh green in the food and grocery app
   'accent':          [palette.fresh[500],   '#3DBE5A'],

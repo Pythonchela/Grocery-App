@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Tag, Zap } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import { brand } from '@ds/brand';
 import ProductCard from '../../ProductCard';
 import DietMark from '../../DietMark';
@@ -43,9 +43,33 @@ function Rail({ title, href, products, onAddToCart }) {
   );
 }
 
+/** A heading, then the first items as small tiles: a picture on a soft green square, and the name. */
+function TileGrid({ title, href, products }) {
+  if (!products.length) return null;
+  return (
+    <section>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <h2 className="text-xl font-black text-ink">{title}</h2>
+        {href && <Link href={href} className="text-sm font-black text-accent hover:underline">See all</Link>}
+      </div>
+      <div className="grid grid-cols-4 gap-x-3 gap-y-4 sm:grid-cols-6 lg:grid-cols-8">
+        {products.map((p) => (
+          <Link key={p.id} href={`/product/${p.id}`} className="group text-center">
+            <span className="block aspect-square overflow-hidden rounded-[18px] bg-pastel-green p-1.5 transition group-hover:shadow-card">
+              {p.images?.[0] && <img src={p.images[0]} alt="" loading="lazy" className="h-full w-full rounded-[13px] object-cover" />}
+            </span>
+            <span className="mt-1.5 block text-[11px] font-semibold leading-tight text-ink sm:text-xs">{p.title.replace(/^Sample: /, '')}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function QuickHome({ categories, products, popular, onAddToCart }) {
   const [vegOnly, setVegOnly] = useState(false);
   const [offersOnly, setOffersOnly] = useState(false);
+  const [tab, setTab] = useState(null); // a category id, or null for All
 
   const keep = (p) => !(vegOnly && (p.diet === 'non_veg' || p.diet === 'egg')) && !(offersOnly && !(p.discount > 0));
   const shown = products.filter(keep);
@@ -53,19 +77,15 @@ export default function QuickHome({ categories, products, popular, onAddToCart }
 
   const chip = (on) =>
     `inline-flex items-center gap-2 rounded-pill border px-4 py-2 text-sm font-bold transition ${
-      on ? 'border-accent bg-accent-soft text-accent' : 'border-line bg-surface text-ink-muted hover:border-line-strong'
+      on ? 'border-on-accent bg-surface text-accent' : 'border-on-accent/40 bg-transparent text-on-accent hover:border-on-accent'
     }`;
 
   return (
     <div className="space-y-8">
-      <section className="rounded-panel bg-accent-soft p-5 sm:p-8">
-        <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-accent">
-          <Zap className="h-4 w-4" /> Quick delivery
-        </p>
-        <h1 className="mt-1 text-3xl font-black leading-tight text-ink sm:text-4xl">
-          {ready ? `Ready in ${ready}` : `Fresh from ${brand.name}`}
-        </h1>
-        <p className="mt-1 text-sm font-medium text-ink-muted">Delivered fresh by {brand.name}.</p>
+      <section className="rounded-[28px] bg-accent p-5 text-on-accent sm:p-8">
+        <p className="text-sm font-semibold opacity-90">{brand.name} in</p>
+        <h1 className="mt-0.5 text-4xl font-black leading-tight sm:text-5xl">{ready || 'minutes'}</h1>
+        <p className="mt-1 text-sm font-medium opacity-90">Delivered fresh by {brand.name}.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" aria-pressed={vegOnly} onClick={() => setVegOnly((v) => !v)} className={chip(vegOnly)}>
             <DietMark diet="veg" /> Veg only
@@ -74,16 +94,32 @@ export default function QuickHome({ categories, products, popular, onAddToCart }
             <Tag className="h-4 w-4" /> Offers
           </button>
         </div>
+        {categories.length > 1 && (
+          <div role="tablist" aria-label="Aisles" className="-mx-1 mt-5 flex gap-1 overflow-x-auto">
+            {[{ id: null, name: 'All' }, ...categories].map((c) => (
+              <button
+                key={c.id ?? 'all'}
+                type="button"
+                role="tab"
+                aria-selected={tab === c.id}
+                onClick={() => setTab(c.id)}
+                className={`shrink-0 border-b-[3px] px-3 py-2 text-sm transition ${tab === c.id ? 'border-on-accent font-black' : 'border-transparent font-semibold opacity-80 hover:opacity-100'}`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
-      {categories.length > 0 && (
+      {categories.length > 0 && tab === null && (
         <section aria-label="Categories">
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             {categories.map((c) => (
               <Link key={c.id} href={`/category/${c.slug}`} className="group flex flex-col items-center gap-2 text-center">
-                <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-pill bg-surface-sunken ring-1 ring-line transition group-hover:ring-accent">
+                <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[22px] bg-pastel-green p-1.5 transition group-hover:shadow-card">
                   {c.coverImageUrl || c.imageUrl ? (
-                    <img src={c.coverImageUrl || c.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    <img src={c.coverImageUrl || c.imageUrl} alt="" className="h-full w-full rounded-[16px] object-cover" loading="lazy" />
                   ) : (
                     <span className="text-xl font-black text-accent">{c.name.slice(0, 1)}</span>
                   )}
@@ -95,15 +131,14 @@ export default function QuickHome({ categories, products, popular, onAddToCart }
         </section>
       )}
 
-      <Rail title="Popular right now" products={popular.filter(keep)} onAddToCart={onAddToCart} />
+      {tab === null && <Rail title="Popular right now" products={(popular.length ? popular : products.slice(0, 10)).filter(keep)} onAddToCart={onAddToCart} />}
 
-      {categories.map((c) => (
-        <Rail
+      {categories.filter((c) => tab === null || c.id === tab).map((c) => (
+        <TileGrid
           key={c.id}
           title={c.name}
           href={`/category/${c.slug}`}
-          products={shown.filter((p) => p.categoryId === c.id).slice(0, 12)}
-          onAddToCart={onAddToCart}
+          products={shown.filter((p) => p.categoryId === c.id).slice(0, tab === null ? 8 : 40)}
         />
       ))}
 

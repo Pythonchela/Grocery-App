@@ -228,8 +228,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   _UnitPicker(
                     product: p,
                     selected: _variant,
-                    sizeLabel: p.sizeLabel,
-                    colourLabel: p.colourLabel,
                     onChanged: (v) => setState(() => _variant = v),
                   ),
                 ],
@@ -427,7 +425,7 @@ class _UnitPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Select unit', style: TextStyle(fontSize: DsText.md, fontWeight: DsWeight.black, color: c.ink)),
+        Text(product.sizeLabel == 'Size' ? 'Select unit' : 'Select ${product.sizeLabel.toLowerCase()}', style: TextStyle(fontSize: DsText.md, fontWeight: DsWeight.black, color: c.ink)),
         const SizedBox(height: DsSpace.s2),
         SizedBox(
           height: 78,

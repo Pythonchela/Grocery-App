@@ -38,7 +38,13 @@ class StarterCatalogSeeder extends Seeder
             ], $created);
             $groceries = $this->category('groceries', 'Groceries', 'ShoppingBag', 3, 'photo-1586201375761-83865001e31c', 20, null, [
                 ['title' => 'Food details', 'labels' => ['Ingredients', 'Shelf life', 'Storage', 'FSSAI licence no.']],
-            ], $created);
+            ], $created, [
+                // What a packet comes in, so the add-product page offers these as ticks.
+                'size_label' => 'Pack size',
+                'sizes' => ['100 g', '250 g', '500 g', '1 kg', '2 kg', '5 kg'],
+                'color_label' => 'Flavour',
+                'colors' => [],
+            ]);
 
             // ── Restaurant: the category's template gives every dish a portion,
             //    add-ons, leave-outs and spice level. ────────────────────────────
@@ -126,7 +132,7 @@ class StarterCatalogSeeder extends Seeder
      * @param  array<int, array<string, mixed>>|null  $options  the choices every item here starts with
      * @param  array<int, array{title: string, labels: array<int, string>}>  $specs  rows to suggest when listing an item
      */
-    private function category(string $slug, string $name, string $icon, int $order, string $photo, int $prepMinutes, ?array $options, array $specs, array &$created): Category
+    private function category(string $slug, string $name, string $icon, int $order, string $photo, int $prepMinutes, ?array $options, array $specs, array &$created, ?array $variantSetup = null): Category
     {
         $category = Category::firstOrCreate(['slug' => $slug], [
             'name' => $name,
@@ -135,6 +141,7 @@ class StarterCatalogSeeder extends Seeder
             'sort_order' => $order,
             'is_featured' => true,
             'option_groups' => $options,
+            'variant_setup' => $variantSetup,
             'spec_template' => $specs,
             'delivery_profile' => 'instant',
             'prep_minutes' => $prepMinutes,

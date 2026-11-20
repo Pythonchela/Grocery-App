@@ -84,7 +84,9 @@ void main() {
       await finishLoad(tester);
       expect(find.text('Could not reach the store'), findsNothing);
       expect(find.byType(QuickCategoryGrid), findsOneWidget);
-      await tester.tap(find.byType(CategoryThumb).first);
+      await tester.tap(find
+          .descendant(of: find.byType(QuickCategoryGrid), matching: find.byType(InkWell))
+          .first);
       await tester.pumpAndSettle();
       expect(find.byType(CategoryScreen), findsOneWidget);
     }, () => client);

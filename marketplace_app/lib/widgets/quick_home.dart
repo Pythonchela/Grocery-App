@@ -14,7 +14,8 @@ import 'product_rail.dart';
 
 /// "15–25 min", from the preparation times the products themselves declare; null when none do.
 String? readyRange(Iterable<Product> products) {
-  final minutes = products.map((p) => p.prepMinutes).where((m) => m > 0).toList()..sort();
+  final minutes =
+      products.map((p) => p.prepMinutes).where((m) => m > 0).toList()..sort();
   if (minutes.isEmpty) return null;
   final low = minutes.first;
   final high = minutes.last;
@@ -36,15 +37,15 @@ class QuickSearchBar extends StatelessWidget {
       label: 'Search',
       child: Material(
         color: c.surface,
-        borderRadius: DsRadius.panelAll,
+        borderRadius: DsRadius.pillAll,
         child: InkWell(
-          borderRadius: DsRadius.panelAll,
+          borderRadius: DsRadius.pillAll,
           onTap: onTap,
           child: Container(
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: DsSpace.s4),
             decoration: BoxDecoration(
-              borderRadius: DsRadius.panelAll,
+              borderRadius: DsRadius.pillAll,
               border: Border.all(color: c.line),
             ),
             child: Row(
@@ -55,7 +56,8 @@ class QuickSearchBar extends StatelessWidget {
                   child: Text(hint,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: DsText.md, color: c.inkSubtle)),
+                      style:
+                          TextStyle(fontSize: DsText.md, color: c.inkSubtle)),
                 ),
               ],
             ),
@@ -85,7 +87,11 @@ class QuickToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.ds;
 
-    Widget chip({required String label, required bool on, required VoidCallback onTap, Widget? leading}) {
+    Widget chip(
+        {required String label,
+        required bool on,
+        required VoidCallback onTap,
+        Widget? leading}) {
       return Material(
         color: on ? c.accentSoft : c.surface,
         borderRadius: DsRadius.pillAll,
@@ -102,7 +108,10 @@ class QuickToolbar extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (leading != null) ...[leading, const SizedBox(width: DsSpace.s2)],
+                if (leading != null) ...[
+                  leading,
+                  const SizedBox(width: DsSpace.s2)
+                ],
                 Text(label,
                     style: TextStyle(
                         fontSize: DsText.sm,
@@ -130,7 +139,8 @@ class QuickToolbar extends StatelessWidget {
           chip(
             label: 'Offers',
             on: offersOnly,
-            leading: Icon(Icons.local_offer_outlined, size: 15, color: offersOnly ? c.accent : c.inkMuted),
+            leading: Icon(Icons.local_offer_outlined,
+                size: 15, color: offersOnly ? c.accent : c.inkMuted),
             onTap: () => onOffers(!offersOnly),
           ),
         ],
@@ -139,12 +149,13 @@ class QuickToolbar extends StatelessWidget {
   }
 }
 
-/// Every category as a tile in a grid, four to a row, like the aisles of a shop.
+/// Every category as a rounded tile in a grid, four to a row, like the aisles of a shop.
 class QuickCategoryGrid extends StatelessWidget {
   final List<Category> categories;
   final ValueChanged<Category> onSelected;
 
-  const QuickCategoryGrid({super.key, required this.categories, required this.onSelected});
+  const QuickCategoryGrid(
+      {super.key, required this.categories, required this.onSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -162,17 +173,43 @@ class QuickCategoryGrid extends StatelessWidget {
           crossAxisCount: scale > 1.5 ? 2 : 4,
           mainAxisSpacing: DsSpace.s3,
           crossAxisSpacing: DsSpace.s2,
-          mainAxisExtent: 98 * scale,
+          mainAxisExtent: 104 * scale,
         ),
         itemBuilder: (context, i) {
           final category = categories[i];
+          final image = category.imageUrl;
           return InkWell(
             borderRadius: DsRadius.cardAll,
             onTap: () => onSelected(category),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                CategoryThumb(category: category, size: 62),
+                Container(
+                  width: 68,
+                  height: 68,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                      color: c.pastelGreen,
+                      borderRadius: BorderRadius.circular(18)),
+                  child: image == null
+                      ? Icon(
+                          CategoryThumb.icons[category.iconUrl] ??
+                              Icons.category_outlined,
+                          color: c.accent,
+                          size: 28)
+                      : Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(13),
+                            child: Image.network(image,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                    Icons.category_outlined,
+                                    color: c.accent,
+                                    size: 28)),
+                          ),
+                        ),
+                ),
                 const SizedBox(height: DsSpace.s2),
                 Text(category.name,
                     maxLines: 2,
@@ -188,6 +225,174 @@ class QuickCategoryGrid extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// The category names as tabs in the green header: "All", then one per aisle.
+class QuickTabs extends StatelessWidget {
+  final List<Category> categories;
+  final Category? selected;
+  final ValueChanged<Category?> onSelected;
+
+  const QuickTabs(
+      {super.key,
+      required this.categories,
+      required this.selected,
+      required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ds;
+    Widget tab(String label, bool on, VoidCallback onTap, {Key? key}) {
+      return InkWell(
+        key: key,
+        onTap: onTap,
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: DsSpace.s3),
+          decoration: BoxDecoration(
+            border: Border(
+                bottom: BorderSide(
+                    color: on ? c.onAccent : Colors.transparent, width: 3)),
+          ),
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: DsText.sm,
+                  fontWeight: on ? DsWeight.black : DsWeight.semibold,
+                  color: on ? c.onAccent : c.onAccent.withValues(alpha: 0.75))),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 42,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: DsSpace.s2),
+        children: [
+          tab('All', selected == null, () => onSelected(null),
+              key: const ValueKey('quick-tab-all')),
+          for (final category in categories)
+            tab(category.name, selected?.slug == category.slug,
+                () => onSelected(category),
+                key: ValueKey('quick-tab-${category.slug}')),
+        ],
+      ),
+    );
+  }
+}
+
+/// A heading with "See all", then the first items as small tiles, four to a row.
+class QuickTileGrid extends StatelessWidget {
+  final String title;
+  final List<Product> products;
+  final void Function(Product) onTap;
+  final VoidCallback? onSeeAll;
+
+  const QuickTileGrid(
+      {super.key,
+      required this.title,
+      required this.products,
+      required this.onTap,
+      this.onSeeAll});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ds;
+    if (products.isEmpty) return const SizedBox.shrink();
+    final scale = MediaQuery.textScalerOf(context).scale(12) / 12;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              DsSpace.s4, DsSpace.s5, DsSpace.s2, DsSpace.s1),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(title,
+                    style: TextStyle(
+                        fontFamily: DsFont.display,
+                        fontSize: DsText.lg,
+                        fontWeight: DsWeight.black,
+                        color: c.ink)),
+              ),
+              if (onSeeAll != null)
+                TextButton(
+                  onPressed: onSeeAll,
+                  child: Text('See all',
+                      style: TextStyle(
+                          fontSize: DsText.sm,
+                          fontWeight: DsWeight.bold,
+                          color: c.accent)),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DsSpace.s4),
+          child: LayoutBuilder(builder: (context, box) {
+            final columns = scale > 1.5 ? 2 : 4;
+            // A square picture, then room for a two-line name.
+            final tile = (box.maxWidth - DsSpace.s2 * (columns - 1)) / columns;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: products.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                mainAxisSpacing: DsSpace.s3,
+                crossAxisSpacing: DsSpace.s2,
+                mainAxisExtent: tile + 38 * scale,
+              ),
+              itemBuilder: (context, i) {
+                final p = products[i];
+                return Semantics(
+                  button: true,
+                  label: p.title,
+                  child: InkWell(
+                    borderRadius: DsRadius.cardAll,
+                    onTap: () => onTap(p),
+                    child: Column(
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 1,
+                          child: Container(
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                                color: c.pastelGreen,
+                                borderRadius: BorderRadius.circular(16)),
+                            padding: const EdgeInsets.all(4),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(p.image,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const SizedBox.shrink()),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: DsSpace.s1),
+                        Text(p.title.replaceFirst('Sample: ', ''),
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 10.5,
+                                height: 1.2,
+                                fontWeight: DsWeight.semibold,
+                                color: c.ink)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
+        ),
+      ],
     );
   }
 }
@@ -216,7 +421,8 @@ class QuickSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(DsSpace.s4, DsSpace.s5, DsSpace.s2, DsSpace.s2),
+          padding: const EdgeInsets.fromLTRB(
+              DsSpace.s4, DsSpace.s5, DsSpace.s2, DsSpace.s2),
           child: Row(
             children: [
               Expanded(
