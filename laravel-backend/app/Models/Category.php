@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'slug', 'parent_id', 'icon_url', 'image_url', 'banner_url', 'filter_config', 'option_groups', 'spec_template', 'delivery_profile', 'prep_minutes', 'sort_order', 'is_featured'])]
+#[Fillable(['name', 'slug', 'parent_id', 'icon_url', 'image_url', 'banner_url', 'filter_config', 'option_groups', 'variant_setup', 'spec_template', 'delivery_profile', 'prep_minutes', 'sort_order', 'is_featured'])]
 class Category extends Model
 {
     use HasFactory, HasUuids;
@@ -17,6 +17,7 @@ class Category extends Model
         return [
             'filter_config' => 'array',
             'option_groups' => 'array',
+            'variant_setup' => 'array',
             'spec_template' => 'array',
             'is_featured' => 'boolean',
         ];

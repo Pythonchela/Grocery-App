@@ -257,6 +257,31 @@ void main() {
       expect(find.byType(Image), findsOneWidget, reason: 'only Navy has photos');
     });
 
+    testWidgets('the picker uses the names the category gives its choices', (tester) async {
+      phone(tester);
+      await tester.pumpWidget(app(Scaffold(
+        body: SingleChildScrollView(
+          child: VariantPicker(variants: variants, selected: variants.first, onChanged: (_) {}, sizeLabel: 'UK size', colourLabel: 'Finish'),
+        ),
+      )));
+
+      expect(find.text('UK size'), findsOneWidget);
+      expect(find.textContaining('Selected finish: Navy', findRichText: true), findsOneWidget);
+    });
+
+    test('a product reads its category\'s labels, and falls back to Size and Colour', () {
+      final withSetup = Product.fromJson({
+        'id': 'p1', 'title': 'Phone', 'price': 100, 'mrp': 100,
+        'category': {'name': 'Phones', 'variant_setup': {'size_label': 'Storage', 'color_label': 'Colour'}},
+      });
+      expect(withSetup.sizeLabel, 'Storage');
+      expect(withSetup.colourLabel, 'Colour');
+
+      final plain = Product.fromJson({'id': 'p2', 'title': 'Shirt', 'price': 100, 'mrp': 100, 'category': {'name': 'Shirts'}});
+      expect(plain.sizeLabel, 'Size');
+      expect(plain.colourLabel, 'Colour');
+    });
+
     testWidgets('a size that is sold out for the chosen colour is struck through', (tester) async {
       phone(tester);
       await tester.pumpWidget(app(Scaffold(

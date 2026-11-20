@@ -228,6 +228,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   _UnitPicker(
                     product: p,
                     selected: _variant,
+                    sizeLabel: p.sizeLabel,
+                    colourLabel: p.colourLabel,
                     onChanged: (v) => setState(() => _variant = v),
                   ),
                 ],

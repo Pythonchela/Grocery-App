@@ -5,6 +5,7 @@ import { X, Save, Tag, Plus, Trash2, GripVertical, SlidersHorizontal, ListChecks
 import { apiFetch } from '../../lib/apiClient';
 import { Button } from '@ds/ui';
 import OptionGroupsEditor from './OptionGroupsEditor';
+import VariantSetupEditor from './VariantSetupEditor';
 import { DELIVERY_PROFILES } from '../../lib/productOptions';
 import { currentKind } from '../../lib/storeKind';
 import * as Icons from 'lucide-react';
@@ -53,6 +54,8 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
   const [activeTab, setActiveTab] = useState('details');
   const [filterGroups, setFilterGroups] = useState([]);
   const [optionGroups, setOptionGroups] = useState([]);
+  // What shoppers choose between in this category: labels, sizes, colours.
+  const [variantSetup, setVariantSetup] = useState(null);
   // Suggested specification rows: [{ title, labelsText }] (labels one per line while editing).
   const [specTemplate, setSpecTemplate] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -100,6 +103,7 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
       const config = category.filterConfig || category.filter_config;
       setFilterGroups(config?.groups || []);
       setOptionGroups(category.optionGroups || category.option_groups || []);
+      setVariantSetup(category.variantSetup || category.variant_setup || null);
       setSpecTemplate((category.specTemplate || category.spec_template || []).map(g => ({
         title: g.title || '',
         labelsText: (g.labels || []).join('\n'),
@@ -108,6 +112,7 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
       setForm(EMPTY_FORM);
       setFilterGroups([]);
       setOptionGroups([]);
+      setVariantSetup(null);
     }
     setError('');
     setActiveTab('details');
@@ -164,6 +169,8 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
       filter_config: filterConfig,
       // The template every product in this category starts from.
       option_groups: optionGroups.length > 0 ? optionGroups : null,
+      // What the two choices are called and the values to offer (sizes, colours...).
+      variant_setup: variantSetup,
       // Which specification rows to suggest when someone lists a product here.
       spec_template: specTemplate
         .map(g => ({ title: g.title, labels: g.labelsText.split('\n').map(l => l.trim()).filter(Boolean) }))
@@ -209,7 +216,7 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
           {[
             { id: 'details', label: 'Category Details', icon: <Tag className="w-3.5 h-3.5" /> },
             { id: 'filters', label: 'Filter Builder', icon: <SlidersHorizontal className="w-3.5 h-3.5" /> },
-            { id: 'options', label: 'Item Options', icon: <ListChecks className="w-3.5 h-3.5" /> },
+            { id: 'options', label: 'Sizes & options', icon: <ListChecks className="w-3.5 h-3.5" /> },
             { id: 'specs', label: 'Spec Template', icon: <ClipboardList className="w-3.5 h-3.5" /> },
           ].map(tab => (
             <button
@@ -474,9 +481,16 @@ export default function CategoryFormModal({ isOpen, onClose, category, categorie
           {activeTab === 'options' && (
             <div className="p-6 space-y-4 text-xs">
               <div className="bg-accent/5 border border-accent/20 rounded-card p-3 text-accent font-semibold">
-                Choices shoppers make on each item in <strong>{form.name || 'this category'}</strong>: portion size, add-ons,
-                things to leave out, a weight. Every product here starts with these; a product can then change them.
+                What shoppers pick before they buy <strong>{form.name || 'this category'}</strong>. Set the sizes and colours
+                (or storage, pack size, flavour) once here; adding a product then means ticking from this list.
               </div>
+              <h3 className="text-sm font-black text-ink">Sizes and colours</h3>
+              <VariantSetupEditor value={variantSetup} onChange={setVariantSetup} />
+
+              <h3 className="pt-4 text-sm font-black text-ink">Other choices</h3>
+              <p className="text-ink-subtle">
+                Portion size, add-ons, things to leave out, a weight. Every product here starts with these; a product can then change them.
+              </p>
               <OptionGroupsEditor groups={optionGroups} onChange={setOptionGroups} />
             </div>
           )}

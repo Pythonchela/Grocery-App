@@ -457,11 +457,17 @@ class VariantPicker extends StatelessWidget {
   final Variant? selected;
   final ValueChanged<Variant> onChanged;
 
+  /// What the product's category calls its two choices.
+  final String sizeLabel;
+  final String colourLabel;
+
   const VariantPicker({
     super.key,
     required this.variants,
     required this.selected,
     required this.onChanged,
+    this.sizeLabel = 'Size',
+    this.colourLabel = 'Colour',
   });
 
   static bool isGrid(List<Variant> variants) {
@@ -533,7 +539,7 @@ class VariantPicker extends StatelessWidget {
         if (colours.length > 1) ...[
           Text.rich(TextSpan(children: [
             TextSpan(
-              text: 'Selected colour: ',
+              text: 'Selected ${colourLabel.toLowerCase()}: ',
               style: TextStyle(
                   fontSize: DsText.base,
                   fontWeight: DsWeight.bold,
@@ -578,7 +584,7 @@ class VariantPicker extends StatelessWidget {
         ],
         if (sizes.length > 1) ...[
           SizedBox(height: colours.length > 1 ? DsSpace.s5 : 0),
-          Text('Size',
+          Text(sizeLabel,
               style: TextStyle(
                   fontSize: DsText.base,
                   fontWeight: DsWeight.bold,

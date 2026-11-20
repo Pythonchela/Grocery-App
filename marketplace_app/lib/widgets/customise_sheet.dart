@@ -117,6 +117,8 @@ class _CustomiseSheetState extends State<CustomiseSheet> {
                     VariantPicker(
                       variants: _p.variants,
                       selected: _variant,
+                      sizeLabel: _p.sizeLabel,
+                      colourLabel: _p.colourLabel,
                       onChanged: (v) => setState(() {
                         _variant = v;
                         _message = null;

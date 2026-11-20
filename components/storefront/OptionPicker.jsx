@@ -251,7 +251,7 @@ export function OptionPicker({ groups = [], selection, onChange }) {
  * Variants as colour swatches and size chips - the way clothing is shopped -
  * when they form a colour x size grid; otherwise a single list of labels.
  */
-export function VariantPicker({ variants = [], selected, onChange }) {
+export function VariantPicker({ variants = [], selected, onChange, sizeLabel = 'Size', colourLabel = 'Colour' }) {
   if (variants.length < 2) return null;
 
   if (!isVariantGrid(variants)) {
@@ -285,7 +285,7 @@ export function VariantPicker({ variants = [], selected, onChange }) {
       {colours.length > 1 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-ink">
-            Colour <span className="ml-2 font-normal text-ink-muted">{colour}</span>
+            {colourLabel} <span className="ml-2 font-normal text-ink-muted">{colour}</span>
           </h3>
           <div className="flex flex-wrap gap-3">
             {colours.map((c) => {
@@ -313,7 +313,7 @@ export function VariantPicker({ variants = [], selected, onChange }) {
       )}
       {sizes.length > 1 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-ink">Size</h3>
+          <h3 className="text-sm font-semibold text-ink">{sizeLabel}</h3>
           <div className="flex flex-wrap gap-2">
             {sizes.map((s) => {
               const v = find(colour, s);

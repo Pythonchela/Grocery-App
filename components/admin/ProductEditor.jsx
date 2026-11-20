@@ -12,7 +12,8 @@ import { uploadFile } from '../../lib/uploads';
 import { formFromImportRow } from '../../lib/importRows';
 import { currentKind as kind } from '../../lib/storeKind';
 import {
-  EMPTY_FORM, EMPTY_VARIANT, autoSlug, colourPhotosOf, formFromProduct, hasVariantOptions, payloadFromForm, readiness,
+  EMPTY_FORM, EMPTY_VARIANT, autoSlug, colourPhotosOf, formFromProduct, hasVariantOptions, payloadFromForm, pickedOptions,
+  readiness, rebuildVariants,
 } from '../../lib/productForm';
 import AiFillPanel from './AiFillPanel';
 import RichTextEditor from './RichTextEditor';
@@ -125,6 +126,9 @@ export default function ProductEditor({ productId, token }) {
   // Whether this product is sold in sizes or colours. A choice the admin makes, not something to guess
   // from the rows: turning it on must not need a made-up row to stay on.
   const [optionsOn, setOptionsOn] = useState(false);
+  // The size or colour being typed when it is not on the category's list.
+  const [ownSize, setOwnSize] = useState('');
+  const [ownColour, setOwnColour] = useState('');
   const baseline = useRef(JSON.stringify(EMPTY_FORM));
   const topRef = useRef(null);
 
@@ -227,15 +231,6 @@ export default function ProductEditor({ productId, token }) {
     });
   };
 
-  const addSize = (size) => {
-    setForm((f) => {
-      if (f.variants.some((v) => (v.size || '').toLowerCase() === size.toLowerCase())) return f;
-      const blank = (v) => !v.color && !v.size && !v.sku && !v.price && !v.mrp && !v.id;
-      const rows = f.variants.length === 1 && blank(f.variants[0]) ? [] : f.variants;
-      return { ...f, variants: [...rows, { ...EMPTY_VARIANT, size }] };
-    });
-  };
-
   const colourMap = colourPhotosOf(form.variants);
   const setColourPhotos = (key, urls) =>
     setForm((f) => ({
@@ -305,8 +300,47 @@ export default function ProductEditor({ productId, token }) {
     if (dirty && !window.confirm('Leave without saving? What you entered on this page will be lost.')) e.preventDefault();
   };
 
+  // A new product in a category that lists sizes or colours starts with them switched on, so the
+  // list is in front of the admin instead of hidden behind a tick box they might not find.
+  useEffect(() => {
+    if (isEdit) return;
+    const chosen = categories.find((c) => c.id === form.categoryId);
+    const listed = (chosen?.variantSetup?.sizes?.length || 0) + (chosen?.variantSetup?.colors?.length || 0) > 0;
+    if (listed && !hasVariantOptions(form.variants)) setOptionsOn(true);
+  }, [form.categoryId, categories]);
+
   // ── render helpers ────────────────────────────────────────────────────────────────────
   const category = categories.find((c) => c.id === form.categoryId);
+
+  // What the category says its products come in. Without one, the usual clothing sizes are offered.
+  const setup = category?.variantSetup || null;
+  const sizeLabel = setup?.size_label || kind.sizeLabel || 'Size';
+  const colourLabel = setup?.color_label || kind.colourLabel || 'Colour';
+  const picked = pickedOptions(form.variants);
+  const listedSizes = setup?.sizes?.length ? setup.sizes : SIZE_CHIPS;
+  const sizeChoices = [...listedSizes, ...picked.sizes.filter((s) => !listedSizes.some((x) => x.toLowerCase() === s.toLowerCase()))];
+  const listedColours = setup?.colors || [];
+  const colourChoices = [
+    ...listedColours,
+    ...picked.colours.filter((c) => !listedColours.some((x) => x.name.toLowerCase() === c.name.toLowerCase())),
+  ];
+  const sizeOn = (s) => picked.sizes.some((x) => x.toLowerCase() === s.toLowerCase());
+  const colourOn = (name) => picked.colours.some((x) => x.name.toLowerCase() === name.toLowerCase());
+  const setRows = (sizes, colours) => setForm((f) => ({ ...f, variants: rebuildVariants(f.variants, sizes, colours) }));
+  const toggleSize = (s) => setRows(sizeOn(s) ? picked.sizes.filter((x) => x.toLowerCase() !== s.toLowerCase()) : [...picked.sizes, s], picked.colours);
+  const toggleColour = (c) =>
+    setRows(picked.sizes, colourOn(c.name) ? picked.colours.filter((x) => x.name.toLowerCase() !== c.name.toLowerCase()) : [...picked.colours, { name: c.name, hex: c.hex || '' }]);
+  const addOwnSize = () => {
+    const s = ownSize.trim();
+    if (s && !sizeOn(s)) setRows([...picked.sizes, s], picked.colours);
+    setOwnSize('');
+  };
+  const addOwnColour = () => {
+    const n = ownColour.trim();
+    if (n && !colourOn(n)) setRows(picked.sizes, [...picked.colours, { name: n, hex: '' }]);
+    setOwnColour('');
+  };
+
   const filterGroups = (category?.filterConfig || category?.filter_config)?.groups || [];
   const discount = (() => {
     const p = parseFloat(form.price);
@@ -613,24 +647,74 @@ export default function ProductEditor({ productId, token }) {
 
               {hasOptions && (
                 <div className="space-y-3">
-                  {SIZE_CHIPS.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-ink-muted">Quick add:</span>
-                    {SIZE_CHIPS.map((s) => (
-                      <button key={s} type="button" onClick={() => addSize(s)} className="rounded-pill border border-line px-3 py-1 text-xs font-bold text-ink hover:border-line-strong">
-                        + {s}
-                      </button>
-                    ))}
+                  <div className="space-y-3 rounded-card border border-line p-3">
+                    <p className="text-xs text-ink-subtle">
+                      {setup
+                        ? `Tick what you sell. The ${category?.name || 'category'} list is set in Categories; each tick makes a row below.`
+                        : 'Tick what you sell; each tick makes a row below. Set a list for this category in Categories to see its own sizes and colours here.'}
+                    </p>
+                    <div>
+                      <p className="mb-1.5 text-xs font-black text-ink">{sizeLabel}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {sizeChoices.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            aria-pressed={sizeOn(s)}
+                            onClick={() => toggleSize(s)}
+                            className={`rounded-pill border px-3 py-1 text-xs font-bold ${sizeOn(s) ? 'border-accent bg-accent-soft text-ink' : 'border-line text-ink-muted hover:border-line-strong'}`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                        <input
+                          className="w-28 rounded-pill border border-line bg-surface px-3 py-1 text-xs font-medium focus:border-line-strong focus:outline-none"
+                          value={ownSize}
+                          onChange={(e) => setOwnSize(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOwnSize(); } }}
+                          onBlur={addOwnSize}
+                          placeholder="Another…"
+                          aria-label={`Add another ${sizeLabel.toLowerCase()}`}
+                        />
+                      </div>
+                    </div>
+                    {kind.colours && (
+                    <div>
+                      <p className="mb-1.5 text-xs font-black text-ink">{colourLabel}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {colourChoices.map((c) => (
+                          <button
+                            key={c.name}
+                            type="button"
+                            aria-pressed={colourOn(c.name)}
+                            onClick={() => toggleColour(c)}
+                            className={`inline-flex items-center gap-1.5 rounded-pill border px-3 py-1 text-xs font-bold ${colourOn(c.name) ? 'border-accent bg-accent-soft text-ink' : 'border-line text-ink-muted hover:border-line-strong'}`}
+                          >
+                            {c.hex && <span className="h-3 w-3 rounded-pill border border-line" style={{ background: c.hex }} />}
+                            {c.name}
+                          </button>
+                        ))}
+                        <input
+                          className="w-28 rounded-pill border border-line bg-surface px-3 py-1 text-xs font-medium focus:border-line-strong focus:outline-none"
+                          value={ownColour}
+                          onChange={(e) => setOwnColour(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOwnColour(); } }}
+                          onBlur={addOwnColour}
+                          placeholder="Another…"
+                          aria-label={`Add another ${colourLabel.toLowerCase()}`}
+                        />
+                      </div>
+                    </div>
+                    )}
                   </div>
-                  )}
                   {form.variants.map((v, i) => (
                     <div key={v.id || i} className="rounded-card border border-line bg-surface-muted p-3">
                       <div className={`grid grid-cols-2 gap-2 ${kind.colours ? 'sm:grid-cols-[1.3fr_1fr_0.8fr_1fr_auto]' : 'sm:grid-cols-[1.4fr_0.8fr_1fr_auto]'}`}>
                         {kind.colours && (
                         <div className="col-span-2 sm:col-span-1">
-                          <label className="mb-1 block text-xs font-bold text-ink-muted" htmlFor={`pe-vc-${i}`}>{kind.colourLabel || 'Colour'}</label>
+                          <label className="mb-1 block text-xs font-bold text-ink-muted" htmlFor={`pe-vc-${i}`}>{colourLabel}</label>
                           <div className="flex items-center gap-2">
-                            <input id={`pe-vc-${i}`} className={smallInputCls} value={v.color} onChange={(e) => updateVariant(i, 'color', e.target.value)} placeholder={kind.colourPlaceholder || 'e.g. Navy'} />
+                            <input id={`pe-vc-${i}`} className={smallInputCls} value={v.color} onChange={(e) => updateVariant(i, 'color', e.target.value)} placeholder={listedColours[0]?.name ? `e.g. ${listedColours[0].name}` : kind.colourPlaceholder || 'e.g. Navy'} />
                             <input
                               type="color"
                               aria-label={`Swatch colour for variant ${i + 1}`}
@@ -643,8 +727,8 @@ export default function ProductEditor({ productId, token }) {
                         </div>
                         )}
                         <div>
-                          <label className="mb-1 block text-xs font-bold text-ink-muted" htmlFor={`pe-vs-${i}`}>{kind.sizeLabel}</label>
-                          <input id={`pe-vs-${i}`} className={smallInputCls} value={v.size} onChange={(e) => updateVariant(i, 'size', e.target.value)} placeholder={kind.sizePlaceholder} />
+                          <label className="mb-1 block text-xs font-bold text-ink-muted" htmlFor={`pe-vs-${i}`}>{sizeLabel}</label>
+                          <input id={`pe-vs-${i}`} className={smallInputCls} value={v.size} onChange={(e) => updateVariant(i, 'size', e.target.value)} placeholder={listedSizes[1] ? `e.g. ${listedSizes[1]}` : kind.sizePlaceholder} />
                         </div>
                         <div>
                           <label className="mb-1 block text-xs font-bold text-ink-muted" htmlFor={`pe-vk-${i}`}>Stock</label>

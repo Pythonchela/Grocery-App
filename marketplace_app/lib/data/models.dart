@@ -14,6 +14,15 @@ double _num(dynamic v) => v == null ? 0 : (v is num ? v.toDouble() : double.tryP
 int _int(dynamic v) => v == null ? 0 : (v is num ? v.toInt() : int.tryParse('$v') ?? 0);
 String _str(dynamic v) => v?.toString() ?? '';
 
+/// A label a category gives its choices ("UK size", "Storage"), or the plain default when it gives none.
+String _setupLabel(dynamic category, String key, String fallback) {
+  if (category is! Map) return fallback;
+  final setup = category['variant_setup'];
+  if (setup is! Map) return fallback;
+  final label = _str(setup[key]).trim();
+  return label.isEmpty ? fallback : label;
+}
+
 const _fallbackImage =
     'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80';
 
@@ -224,6 +233,10 @@ class Product {
   final List<String> features;
   final List<Variant> variants;
   final String? categoryName;
+
+  /// What this product's category calls its two choices (Size and Colour for clothes, Storage for phones...).
+  final String sizeLabel;
+  final String colourLabel;
   final bool codAvailable;
 
   /// 'veg', 'non_veg' or 'egg' for food; null for everything the mark does not apply to.
@@ -263,6 +276,8 @@ class Product {
     required this.features,
     required this.variants,
     this.categoryName,
+    this.sizeLabel = 'Size',
+    this.colourLabel = 'Colour',
     this.codAvailable = true,
     this.diet,
     this.optionGroups = const [],
@@ -320,6 +335,8 @@ class Product {
           .map((v) => Variant.fromJson(v as Map<String, dynamic>))
           .toList(),
       categoryName: category is Map ? _str(category['name']) : (category == null ? null : _str(category)),
+      sizeLabel: _setupLabel(category, 'size_label', 'Size'),
+      colourLabel: _setupLabel(category, 'color_label', 'Colour'),
       codAvailable: j['cod_available'] != false,
       diet: ['veg', 'non_veg', 'egg'].contains(j['diet']) ? j['diet'] as String : null,
       optionGroups: OptionGroup.parseList(j['option_groups']),

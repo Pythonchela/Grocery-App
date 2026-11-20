@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Support\ProductDetails;
 use App\Services\Options\ProductOptions;
+use App\Services\Options\VariantSetup;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
@@ -71,6 +72,7 @@ class CategoryController extends Controller
             'banner_url' => 'nullable|string',
             'filter_config' => 'nullable|array',
             'option_groups' => 'nullable|array',
+            ...VariantSetup::RULES,
             ...ProductDetails::templateRules(),
             'delivery_profile' => 'nullable|in:instant,parcel,heavy',
             'prep_minutes' => 'nullable|integer|min:0|max:1440',
@@ -91,6 +93,10 @@ class CategoryController extends Controller
     {
         if (isset($validated['option_groups'])) {
             $validated['option_groups'] = ProductOptions::normalize($validated['option_groups']);
+        }
+
+        if (array_key_exists('variant_setup', $validated)) {
+            $validated['variant_setup'] = VariantSetup::normalize($validated['variant_setup']);
         }
 
         if (array_key_exists('spec_template', $validated)) {
@@ -128,6 +134,7 @@ class CategoryController extends Controller
             'banner_url' => 'nullable|string',
             'filter_config' => 'nullable|array',
             'option_groups' => 'nullable|array',
+            ...VariantSetup::RULES,
             ...ProductDetails::templateRules(),
             'delivery_profile' => 'nullable|in:instant,parcel,heavy',
             'prep_minutes' => 'nullable|integer|min:0|max:1440',
