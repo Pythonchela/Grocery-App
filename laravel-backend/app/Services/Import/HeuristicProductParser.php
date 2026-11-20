@@ -134,10 +134,16 @@ class HeuristicProductParser implements ProductParser
             return false;
         }
 
-        $counts = array_map(fn ($l) => substr_count($l, $delim), array_slice($lines, 0, 5));
+        // Count the cells a line really has, not the delimiters in it: a quoted cell such as
+        // "S,M,L,XL" holds commas that do not separate columns, and counting them made every
+        // sheet with a sizes or colours column look like prose.
+        $counts = array_map(
+            fn ($l) => count(str_getcsv($l, $delim, '"', '')),
+            array_slice($lines, 0, 5)
+        );
         $first = $counts[0];
 
-        return $first >= 1 && count(array_unique($counts)) === 1;
+        return $first >= 2 && count(array_unique($counts)) === 1;
     }
 
     private function fromDelimited(array $lines, string $delim, bool $markdown): array

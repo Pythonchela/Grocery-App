@@ -140,6 +140,29 @@ class ProductImportTest extends TestCase
         $this->assertTrue($rows[0]['importable']);
     }
 
+    public function test_a_csv_with_commas_inside_quoted_cells_is_still_a_table(): void
+    {
+        $this->withKey(null);
+        Category::factory()->create(['name' => 'Footwear']);
+
+        // The sizes and colours cells hold commas of their own, so the lines have different comma counts.
+        $csv = "Name,Price,MRP,Category,Size,Colour,Stock\n"
+            ."Trail Shoe,2499,3499,Footwear,\"6,7,8,9\",\"Black,Blue\",12\n"
+            ."Slip On,999,1499,Footwear,\"7,8\",Red,5\n";
+        $response = $this->parse(['files' => [$this->csv('list.csv', $csv)]]);
+
+        $response->assertOk();
+        $rows = $response->json('data.rows');
+        $this->assertCount(2, $rows);
+        $this->assertSame('table', $response->json('data.driver'));
+        $this->assertSame('Trail Shoe', $rows[0]['title']);
+        $this->assertEquals(2499, $rows[0]['price']);
+        // 4 sizes x 2 colours, and 2 sizes x 1 colour.
+        $this->assertCount(8, $rows[0]['variants']);
+        $this->assertCount(2, $rows[1]['variants']);
+        $this->assertTrue($rows[0]['importable']);
+    }
+
     public function test_title_lines_above_the_table_are_skipped(): void
     {
         $this->withKey(null);
